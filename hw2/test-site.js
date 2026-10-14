@@ -1,0 +1,25 @@
+const {chromium}=require('playwright');
+(async()=>{
+ const b=await chromium.launch({headless:true,args:['--no-sandbox']});
+ const pg=await b.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
+ let errors=[];pg.on('pageerror',e=>errors.push(String(e)));pg.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+ await pg.goto('file:///mnt/data/ethereum-statistics-hw2/index.html');
+ await pg.waitForFunction(()=>document.getElementById('final-address').textContent.includes('0x9858'),{timeout:20000});
+ await pg.waitForFunction(()=>document.getElementById('stat-count').textContent==='12',{timeout:30000});
+ console.log('addr',await pg.locator('#final-address').textContent());
+ console.log('stats',await pg.locator('#stats-progress').textContent());
+ await pg.screenshot({path:'/mnt/data/ethereum-statistics-hw2/preview-desktop.png',fullPage:true});
+ await pg.locator('#open-history').click();await pg.screenshot({path:'/mnt/data/ethereum-statistics-hw2/preview-history.png'});console.log('history',await pg.locator('#dialog-title').textContent());await pg.locator('#dialog-close').click();
+ await pg.locator('[data-explain="avalanche"]').click();await pg.screenshot({path:'/mnt/data/ethereum-statistics-hw2/preview-stat-modal.png'});await pg.locator('#dialog-close').click();
+ await pg.locator('#theme-toggle').click();await pg.screenshot({path:'/mnt/data/ethereum-statistics-hw2/preview-dark.png',fullPage:true});
+ await pg.locator('#account-index').fill('1');await pg.locator('#run-pipeline').click();await pg.waitForFunction(()=>document.getElementById('final-path').textContent.endsWith('/1'));
+ console.log('addr1',await pg.locator('#final-address').textContent());
+ await pg.locator('#mnemonic-select').selectOption('b');await pg.waitForFunction(()=>document.getElementById('final-path').textContent.endsWith('/1') && document.getElementById('final-address').textContent.startsWith('0x') && document.getElementById('mnemonic-value').textContent.startsWith('test'));
+ await pg.locator('#account-index').fill('0');await pg.locator('#run-pipeline').click();await pg.waitForFunction(()=>document.getElementById('final-path').textContent.endsWith('/0')&&document.getElementById('final-address').textContent.startsWith('0xf39'));
+ console.log('demo b',await pg.locator('#final-address').textContent());
+ const mobile=await b.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});mobile.on('pageerror',e=>errors.push('mobile '+e));await mobile.goto('file:///mnt/data/ethereum-statistics-hw2/index.html');await mobile.waitForFunction(()=>document.getElementById('final-address').textContent.startsWith('0x9858'),{timeout:20000});
+ await mobile.screenshot({path:'/mnt/data/ethereum-statistics-hw2/preview-mobile.png',fullPage:true});
+ console.log('mobile overflow',await mobile.evaluate(()=>({scrollWidth:document.documentElement.scrollWidth,innerWidth:innerWidth})));
+ console.log('errors',JSON.stringify(errors));await b.close();
+ if(errors.length)process.exitCode=1;
+})();

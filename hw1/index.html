@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#f7f8fb" name="theme-color"/>
+<meta content="Statistics Homework 1: learn elliptic-curve scalar multiplication step by step and investigate coordinate frequencies, bit distributions and correlations." name="description"/>
+<title>
+   From Private Key to Public Key — Statistics Homework 1
+  </title>
+<link href="css/style.css" rel="stylesheet"/>
+<script defer="" src="js/ecc.js">
+</script>
+<script defer="" src="js/app.js">
+</script>
+</head>
+<body>
+<header class="topbar">
+<div class="nav-shell">
+<a aria-label="ECC Laboratory home" class="brand" href="#top">
+<span class="brand-icon">
+      E
+     </span>
+<span>
+      ECC
+      <b>
+       Laboratory
+      </b>
+</span>
+</a>
+<nav aria-label="Sections">
+<a href="#simulator">
+      Simulator
+     </a>
+<a href="#statistics">
+      Statistics
+     </a>
+<a href="#conclusions">
+      Conclusions
+     </a>
+</nav>
+<div class="nav-actions">
+<span class="course-tag">
+      STATISTICS / HW 01
+     </span>
+<button aria-label="Switch to dark theme" aria-pressed="false" class="theme-toggle" id="theme-toggle" title="Switch color theme" type="button">
+<span aria-hidden="true" class="theme-icon">
+       ☾
+      </span>
+<span class="theme-label">
+       Dark
+      </span>
+</button>
+</div>
+</div>
+</header>
+<main class="page-shell" id="top">
+<section aria-labelledby="main-title" class="hero">
+<div class="eyebrow">
+<span class="status-dot">
+</span>
+     INTERACTIVE CRYPTOGRAPHY LAB
+     <span class="eyebrow-line">
+</span>
+     HOMEWORK 01
+    </div>
+<h1 class="hero-title" id="main-title">
+     From Private Key
+     <span aria-hidden="true" class="hero-arrow">
+      →
+     </span>
+<em>
+      Public Key
+     </em>
+</h1>
+<p class="hero-description">
+     This interactive homework demonstrates how a private number becomes a public point through elliptic-curve mathematics. Then we test many inputs to study the patterns that appear in the outputs.
+    </p>
+<div class="hero-actions">
+<a class="btn btn-primary" href="#simulator">
+      Start experimenting
+      <span>
+       ↗
+      </span>
+</a>
+<a class="text-link" href="#how-it-works">
+      How does it work?
+      <span aria-hidden="true">
+       ↓
+      </span>
+</a>
+</div>
+</section>
+<section aria-label="Curve details" class="metric-strip">
+<div class="metric">
+<span class="metric-label">
+      TOY CURVE
+     </span>
+<strong>
+      y² ≡ x³ + 7
+     </strong>
+<span class="metric-note">
+      modulo 17
+     </span>
+</div>
+<div class="metric">
+<span class="metric-label">
+      FINITE POINTS
+     </span>
+<strong>
+      17
+     </strong>
+<span class="metric-note">
+      plus the point at infinity O
+     </span>
+</div>
+<div class="metric">
+<span class="metric-label">
+      DEFAULT BASE POINT
+     </span>
+<strong>
+      G = (1, 5)
+     </strong>
+<span class="metric-note">
+      order 9
+     </span>
+</div>
+<div class="metric">
+<span class="metric-label">
+      DEFAULT PRIVATE KEY
+     </span>
+<strong>
+      k = 6
+     </strong>
+<span class="metric-note">
+      result: Q = (5, 8)
+     </span>
+</div>
+</section>
+<section class="section intro-section" id="how-it-works">
+<div class="section-heading">
+<span class="section-index">
+      01 / THE IDEA
+     </span>
+<h2>
+      One number in.
+      <br/>
+<span class="soft-heading">
+       One curve point out.
+      </span>
+</h2>
+<p>
+      Elliptic-curve scalar multiplication connects a secret number to a public point. Before using the simulator, it helps to understand the curve, the arithmetic and what makes this a one-way operation.
+     </p>
+</div>
+<div class="theory-copy">
+<p>
+      In public-key cryptography, a
+      <strong>
+       private key
+      </strong>
+      is a secret number
+      <strong>
+       k
+      </strong>
+      . A
+      <strong>
+       public key
+      </strong>
+      is computed from that number using a publicly known point
+      <strong>
+       G
+      </strong>
+      . The operation is written
+      <strong>
+       Q = kG
+      </strong>
+      . Anyone who knows k and G can calculate Q, but recovering k from Q is computationally difficult on a properly chosen, large curve.
+     </p>
+<p>
+      For this exercise we use
+      <strong>
+       y² ≡ x³ + 7 (mod 17)
+      </strong>
+      . Here “mod 17” means that we only care about the remainder after dividing by 17: each coordinate lies between 0 and 16. The equation has 17 ordinary points, plus a special point
+      <strong>
+       O
+      </strong>
+      called the point at infinity. We use
+      <strong>
+       G = (1, 5)
+      </strong>
+      and begin with
+      <strong>
+       k = 6
+      </strong>
+      .
+     </p>
+<p>
+<strong>
+       Important:
+      </strong>
+      multiplying a point by 6 is
+      <em>
+       not
+      </em>
+      multiplying its x and y coordinates by 6. It means adding the point to itself six times, using the elliptic-curve addition rule.
+     </p>
+</div>
+<div aria-label="Private key, elliptic curve operation, public key" class="concept-flow">
+<div class="concept-node">
+<div class="node-icon">
+       01
+      </div>
+<div>
+<small>
+        INPUT
+       </small>
+<strong>
+        Private key
+        <span>
+         k
+        </span>
+</strong>
+<p>
+        An integer chosen by the user.
+       </p>
+</div>
+</div>
+<div class="concept-arrow">
+      →
+     </div>
+<div class="concept-node central">
+<div class="node-icon">
+       02
+      </div>
+<div>
+<small>
+        OPERATION
+       </small>
+<strong>
+        Q = kG
+       </strong>
+<p>
+        Elliptic-curve point addition.
+       </p>
+</div>
+</div>
+<div class="concept-arrow">
+      →
+     </div>
+<div class="concept-node">
+<div class="node-icon">
+       03
+      </div>
+<div>
+<small>
+        OUTPUT
+       </small>
+<strong>
+        Public key
+        <span>
+         Q
+        </span>
+</strong>
+<p>
+        A curve point (x, y), or O.
+       </p>
+</div>
+</div>
+</div>
+<p class="inline-note">
+<span aria-hidden="true">
+      ⓘ
+     </span>
+<strong>
+      Teaching model, not real security:
+     </strong>
+     Ethereum uses the curve
+     <strong>
+      secp256k1
+     </strong>
+     , with far larger numbers and a different base point. On this tiny curve, finding the private key by trying every possibility is easy.
+    </p>
+</section>
+<section class="section simulator-section" id="simulator">
+<div class="section-heading compact">
+<span class="section-index">
+      02 / EXPERIMENT
+     </span>
+<div class="section-heading-row">
+<div>
+<h2>
+        Elliptic curve
+        <span class="soft-heading">
+         simulator.
+        </span>
+</h2>
+<p>
+        Try a base point and a private scalar. The program calculates
+        <strong>
+         Q = kG
+        </strong>
+        and plots the valid curve points so you can see where the output lies.
+       </p>
+</div>
+<span class="small-chip">
+       LIVE CALCULATION
+      </span>
+</div>
+</div>
+<div class="section-explainer">
+<p>
+      Start with the professor's values:
+      <strong>
+       G = (1, 5)
+      </strong>
+      ,
+      <strong>
+       k = 6
+      </strong>
+      . Press
+      <strong>
+       Calculate public key
+      </strong>
+      to obtain
+      <strong>
+       Q = (5, 8)
+      </strong>
+      . The green marker is the starting point, the purple marker is the current result and the pale markers are the other points satisfying the equation.
+     </p>
+<p>
+      The
+      <strong>
+       order
+      </strong>
+      of G tells us how many additions it takes to return to O. For the default point, the order is 9:
+      <strong>
+       9G = O
+      </strong>
+      and
+      <strong>
+       10G = G
+      </strong>
+      . This repetition is useful when we analyze the data later.
+     </p>
+</div>
+<div class="experiment-grid">
+<div class="panel control-panel">
+<div class="panel-top">
+<span class="panel-heading">
+        Experiment setup
+       </span>
+<span class="panel-number">
+        01
+       </span>
+</div>
+<label for="base-point">
+       Base point G
+      </label>
+<select aria-describedby="base-help" id="base-point">
+</select>
+<p class="field-help" id="base-help">
+       Choose any valid point; each point has its own order.
+      </p>
+<label for="private-key">
+       Private key k
+      </label>
+<div class="number-field">
+<input id="private-key" inputmode="numeric" max="200" min="1" step="1" type="number" value="6"/>
+<span class="number-suffix">
+        integer
+       </span>
+</div>
+<p class="field-help">
+       Any integer from 1 to 200. For this toy curve, outputs repeat.
+      </p>
+<button class="btn btn-primary btn-full" id="calculate" type="button">
+       Calculate public key
+       <span>
+        →
+       </span>
+</button>
+<p class="form-error" hidden="" id="input-error" role="alert">
+</p>
+<div aria-live="polite" class="result-card">
+<div class="result-label">
+<span>
+         TOY PUBLIC KEY
+        </span>
+<span class="result-indicator">
+</span>
+</div>
+<div class="result-point" id="public-key">
+        (5, 8)
+       </div>
+<p id="result-detail">
+        Q = 6 × (1, 5)
+       </p>
+<div class="result-rule">
+</div>
+<div class="result-meta">
+<span>
+         Generator order
+        </span>
+<strong id="point-order">
+         9
+        </strong>
+</div>
+<div class="result-meta">
+<span>
+         Cycle position
+        </span>
+<strong id="cycle-position">
+         6 / 9
+        </strong>
+</div>
+</div>
+<div class="validation">
+<span>
+        ✓
+       </span>
+       Results are checked against a second scalar-multiplication algorithm.
+      </div>
+</div>
+<div class="panel plot-panel">
+<div class="panel-top">
+<div>
+<span class="panel-heading">
+         Points on the curve
+        </span>
+<p class="panel-subtitle">
+         y² = x³ + 7 (mod 17)
+        </p>
+</div>
+<span class="panel-number">
+        02
+       </span>
+</div>
+<div class="graph-frame">
+<svg aria-label="Scatter plot of all 17 finite points on the elliptic curve over F17" id="curve-plot" role="img" viewbox="0 0 640 394">
+</svg>
+</div>
+<div class="plot-legend">
+<span>
+<i class="legend-dot normal">
+</i>
+        Curve point
+       </span>
+<span>
+<i class="legend-dot base">
+</i>
+        Base point G
+       </span>
+<span>
+<i class="legend-dot selected">
+</i>
+        Current result
+       </span>
+</div>
+<p class="plot-footnote">
+       Each dot solves the equation in the finite field F₁₇. Point O (infinity) cannot be plotted as ordinary coordinates.
+      </p>
+</div>
+</div>
+</section>
+<section class="section walkthrough-section" id="walkthrough">
+<div class="section-heading compact">
+<span class="section-index">
+      03 / STEP BY STEP
+     </span>
+<h2>
+      Follow the
+      <span class="soft-heading">
+       calculation.
+      </span>
+</h2>
+<p>
+      This section answers the algorithmic part of the assignment: show every point addition from G up to kG, instead of displaying only the final point.
+     </p>
+</div>
+<div class="section-explainer">
+<p>
+      We begin at
+      <strong>
+       O
+      </strong>
+      (the neutral element). Adding G once gives G, adding it again gives 2G, and so on. Use
+      <strong>
+       Play
+      </strong>
+      for a slow animation, or click a table row to inspect an individual step. The point highlighted in the simulator chart changes with the selected step.
+     </p>
+<p>
+<strong>
+       How to read the formulas:
+      </strong>
+      λ (lambda) is the
+      <em>
+       slope
+      </em>
+      used by the point-addition rule. We use it to compute the next coordinates. Division
+      <strong>
+       mod 17
+      </strong>
+      is performed with a
+      <em>
+       modular inverse
+      </em>
+      , not ordinary decimal division. When we add a point to itself, we use the special
+      <em>
+       point-doubling
+      </em>
+      formula.
+      The formulas remain available under “Point-addition formulas” in the operation panel; open them whenever you want to check the arithmetic.</p>
+</div>
+<div class="panel walkthrough-panel">
+<div class="walkthrough-toolbar">
+<div>
+<strong>
+        Repeated point addition
+       </strong>
+<span id="step-count">
+        Step 6 of 6
+       </span>
+</div>
+<div class="player-controls">
+<button aria-label="Previous step" class="player-button" id="previous-step" title="Previous step">
+        ←
+       </button>
+<button aria-label="Play animation" class="player-button play-button" id="play-steps">
+        ▶
+        <span>
+         Play
+        </span>
+</button>
+<button aria-label="Next step" class="player-button" id="next-step" title="Next step">
+        →
+       </button>
+<button aria-label="Restart steps" class="player-button" id="reset-steps" title="Restart">
+        ↺
+       </button>
+</div>
+</div>
+<div aria-hidden="true" class="progress-track">
+<div id="step-progress">
+</div>
+</div>
+<div class="walkthrough-grid">
+<div class="step-list-wrap">
+<table class="step-table">
+<thead>
+<tr>
+<th>
+           STEP
+          </th>
+<th>
+           OPERATION
+          </th>
+<th>
+           RESULT
+          </th>
+</tr>
+</thead>
+<tbody id="steps-body">
+</tbody>
+</table>
+</div>
+<div class="step-inspector">
+<div class="inspector-icon">
+        ∑
+       </div>
+<span class="inspector-label">
+        CURRENT OPERATION
+       </span>
+<h3 id="current-operation">
+        6G = 5G + G
+       </h3>
+<div class="inspector-result" id="current-result">
+        (5, 8)
+       </div>
+<p id="current-explanation">
+        Modular point addition
+       </p>
+<details class="formula-hint" id="formulas-details"><summary><strong>Point-addition formulas</strong><span aria-hidden="true" class="formula-toggle-label">Show / hide</span></summary><div class="formula-hint-content">
+
+<span>
+         For distinct points P = (x₁, y₁) and R = (x₂, y₂):
+        </span>
+<span>
+         λ = (y₂ − y₁) · (x₂ − x₁)⁻¹ mod 17
+        </span>
+<span>
+         For doubling P + P: λ = 3x₁² · (2y₁)⁻¹ mod 17
+        </span>
+<span>
+         x₃ = λ² − x₁ − x₂ (mod 17)
+        </span>
+<span>
+         y₃ = λ(x₁ − x₃) − y₁ (mod 17)
+        </span>
+<small>
+         ⁻¹ means “modular inverse”; this is how division works in this finite field. If the result is O, it has no x/y coordinates.
+        </small>
+
+</div></details>
+</div>
+</div>
+<div class="walkthrough-bottom">
+<div>
+<strong>
+        Two algorithms, same result
+       </strong>
+<p>
+        Repeated addition uses k steps. The faster “double-and-add” method needs only O(log k) point operations.
+       </p>
+</div>
+<span class="check-pill" id="method-check">
+       ✓ MATCH
+      </span>
+</div>
+</div>
+</section>
+<section class="section statistics-section" id="statistics">
+<div class="section-heading compact">
+<span class="section-index">
+      04 / STATISTICAL EXPLORATION
+     </span>
+<div class="section-heading-row">
+<div>
+<h2>
+        What do the
+        <span class="soft-heading">
+         numbers reveal?
+        </span>
+</h2>
+<p>
+        The first experiment produces a point. This one produces a dataset: calculate Q for k = 1, 2, …, N, then look at coordinate frequencies, bit patterns and input–output relationships.
+       </p>
+</div>
+</div>
+</div>
+<div class="section-explainer">
+<p>
+      Statistics asks whether outputs appear evenly spread and how they change when the input changes. This does
+      <strong>
+       not
+      </strong>
+      prove that a cryptographic algorithm is secure. Our curve is extremely small and its output sequence repeats, so it is a convenient example of why mathematical structure matters when interpreting numbers.
+     </p>
+<p>
+      Choose how many private keys to test, then select a chart to read its explanation. Frequencies and bit percentages use only
+      <strong>
+       finite points
+      </strong>
+      : the special point O has no coordinates, so it is counted separately.
+     </p>
+</div>
+<div class="stats-tools panel">
+<div class="stats-tool-copy">
+<strong>
+       Experimental sample
+      </strong>
+<span>
+       Test k = 1, 2, …, N using the selected base point
+      </span>
+</div>
+<div class="stats-tool-controls">
+<label for="sample-count">
+       N values
+      </label>
+<input id="sample-count" max="200" min="1" step="1" type="number" value="8"/>
+<button class="btn btn-secondary" id="run-statistics" type="button">
+       Run analysis
+       <span>
+        ↗
+       </span>
+</button>
+</div>
+<p class="form-error" hidden="" id="stats-error" role="alert">
+</p>
+</div>
+<div aria-label="Summary statistics" class="stats-summary">
+<div class="summary-tile">
+<small>
+       SCALARS TESTED
+      </small>
+<strong id="scalars-tested">
+       8
+      </strong>
+</div>
+<div class="summary-tile">
+<small>
+       FINITE OUTPUTS
+      </small>
+<strong id="finite-outputs">
+       8
+      </strong>
+</div>
+<div class="summary-tile">
+<small>
+       UNIQUE POINTS
+      </small>
+<strong id="unique-points">
+       8
+      </strong>
+</div>
+<div class="summary-tile">
+<small>
+       INFINITY OUTPUTS
+      </small>
+<strong id="infinity-count">
+       0
+      </strong>
+</div>
+</div>
+<div class="chart-guide">
+<span aria-hidden="true" class="guide-bubble">
+      ⓘ
+     </span>
+<div>
+<strong>
+       Each panel is interactive.
+      </strong>
+<span>
+       Click a chart or press Enter while it is selected to open an explanation with examples from the current experiment. The rest of the page stays visible behind it.
+      </span>
+</div>
+<span aria-hidden="true" class="guide-arrow">
+      ↗
+     </span>
+</div>
+<div class="stats-grid">
+<div aria-label="Open explanation: X-coordinate frequencies" class="panel chart-panel explainable-card" data-explanation="x" role="button" tabindex="0">
+<div class="panel-top">
+<div>
+<span class="panel-heading">
+         X-coordinate frequencies
+        </span>
+<p class="panel-subtitle">
+         Count of each x ∈ {0, …, 16}
+        </p>
+</div>
+<span class="chart-index">
+        A
+       </span>
+</div>
+<p class="chart-micro-copy">
+       Count how many times each value of x occurs. Does every possible x appear equally often?
+      </p>
+<div aria-label="Histogram of x-coordinate frequencies" class="frequency-chart" id="x-chart" role="img">
+</div>
+<p class="chart-caption" id="x-entropy">
+       Shannon entropy H(X): — bits
+      </p>
+<div class="chart-click-hint">
+<span aria-hidden="true">
+        ⓘ
+       </span>
+       Click to understand this chart
+       <span aria-hidden="true">
+        ↗
+       </span>
+</div>
+</div>
+<div aria-label="Open explanation: Y-coordinate frequencies" class="panel chart-panel explainable-card" data-explanation="y" role="button" tabindex="0">
+<div class="panel-top">
+<div>
+<span class="panel-heading">
+         Y-coordinate frequencies
+        </span>
+<p class="panel-subtitle">
+         Count of each y ∈ {0, …, 16}
+        </p>
+</div>
+<span class="chart-index">
+        B
+       </span>
+</div>
+<p class="chart-micro-copy">
+       Count how many times each value of y occurs. Why might these counts be different?
+      </p>
+<div aria-label="Histogram of y-coordinate frequencies" class="frequency-chart" id="y-chart" role="img">
+</div>
+<p class="chart-caption" id="y-entropy">
+       Shannon entropy H(Y): — bits
+      </p>
+<div class="chart-click-hint">
+<span aria-hidden="true">
+        ⓘ
+       </span>
+       Click to understand this chart
+       <span aria-hidden="true">
+        ↗
+       </span>
+</div>
+</div>
+</div>
+<div class="stats-grid">
+<div aria-label="Open explanation: Bit distribution" class="panel chart-panel explainable-card" data-explanation="bits" role="button" tabindex="0">
+<div class="panel-top">
+<div>
+<span class="panel-heading">
+         Bit distribution
+        </span>
+<p class="panel-subtitle">
+         Percentage of 1-bits for each 5-bit coordinate position
+        </p>
+</div>
+<span class="chart-index">
+        C
+       </span>
+</div>
+<p class="chart-micro-copy">
+       Compare how often each coordinate bit is 1, rather than only looking at decimal values.
+      </p>
+<div class="bit-chart" id="bit-chart">
+</div>
+<p class="chart-caption">
+       Coordinates 0–16 fit in five bits. A balanced 50% is a reference, not a required property here.
+      </p>
+<div class="chart-click-hint">
+<span aria-hidden="true">
+        ⓘ
+       </span>
+       Click to understand this chart
+       <span aria-hidden="true">
+        ↗
+       </span>
+</div>
+</div>
+<div aria-label="Open explanation: input/output relationships" class="panel stats-insights explainable-card" data-explanation="relationships" role="button" tabindex="0">
+<div class="panel-top">
+<div>
+<span class="panel-heading">
+         Input / output relationships
+        </span>
+<p class="panel-subtitle">
+         Exploratory measures, not security proofs
+        </p>
+</div>
+<span class="chart-index">
+        D
+       </span>
+</div>
+<p class="chart-micro-copy">
+       Do larger private keys imply larger coordinates? How many output bits change between neighboring keys?
+      </p>
+<div class="stat-line">
+<span>
+        Pearson r(k, x)
+       </span>
+<strong id="correlation-x">
+        —
+       </strong>
+</div>
+<div class="stat-line">
+<span>
+        Pearson r(k, y)
+       </span>
+<strong id="correlation-y">
+        —
+       </strong>
+</div>
+<div class="stat-line">
+<span>
+        Mean bits changed, k → k+1
+       </span>
+<strong id="adjacent-bits">
+        —
+       </strong>
+</div>
+<p class="small-muted" id="adjacent-note">
+       Measured on pairs with two finite results.
+      </p>
+<div class="insight-warning">
+<span>
+        !
+       </span>
+<p>
+<strong>
+         Interpret with care.
+        </strong>
+        Low Pearson correlation does not mean outputs are random or secure. Adjacent-point bit changes are not the hash-function avalanche criterion.
+       </p>
+</div>
+<div class="chart-click-hint">
+<span aria-hidden="true">
+        ⓘ
+       </span>
+       Click to understand these measures
+       <span aria-hidden="true">
+        ↗
+       </span>
+</div>
+</div>
+</div>
+<div class="panel observation-panel">
+<span class="observation-mark">
+      i
+     </span>
+<div>
+<strong>
+       Important: this is a small cyclic group.
+      </strong>
+<p id="cycle-observation">
+       The default base point G has order 9. Thus 9G = O, and 10G = G: testing more scalars repeats previously seen points. Infinity has no x/y coordinates and is excluded from coordinate-based statistics, but counted separately.
+      </p>
+</div>
+</div>
+<p class="stats-footer-copy">
+     These statistics describe
+     <strong>
+      this specific sample and base point
+     </strong>
+     . Changing G or N can change the charts. Repeating values after the point's order is reached is expected group behavior, not evidence of a programming error.
+    </p>
+</section>
+<section class="section conclusions-section" id="conclusions">
+<div class="section-heading compact">
+<span class="section-index">
+      05 / INTERPRETATION
+     </span>
+<h2>
+      What have we
+      <span class="soft-heading">
+       learned?
+      </span>
+</h2>
+<p>
+      Our results tell a more interesting story than simply “the algorithm works”. They show what elliptic-curve multiplication does, what statistics can reveal, and what cannot be inferred from a toy example.
+     </p>
+</div>
+<div class="conclusion-prose">
+<p>
+      We started with a secret integer k and a public base point G, then used elliptic-curve point addition to compute the public point Q = kG. The example k = 6 gives Q = (5, 8). This transformation is
+      <strong>
+       deterministic
+      </strong>
+      : the same private key and base point always produce the same public key. On real curves with carefully selected parameters, calculating Q is efficient, while recovering k from Q is believed to be computationally infeasible. That asymmetry is why elliptic curves are useful for public-key cryptography and digital signatures.
+     </p>
+<p>
+      The statistical experiment reveals another important aspect:
+      <strong>
+       the output points have mathematical structure
+      </strong>
+      . They must lie on the curve, and multiplying a fixed G visits only its subgroup. The default point has order 9, so outputs repeat after nine steps. As a result, coordinate frequencies are not necessarily uniform, the bits may be unbalanced and large samples may contain many repetitions. These are real properties of our small example, but they cannot be extrapolated directly to Ethereum's much larger secp256k1 curve.
+     </p>
+<p>
+      We also compared inputs and outputs using Pearson correlation and changes in their binary representations. These measurements may show patterns, yet
+      <strong>
+       weak linear correlation is not proof of randomness
+      </strong>
+      , and a large number of changed bits is not proof of security. In particular, elliptic-curve scalar multiplication is
+      <strong>
+       not a cryptographic hash function
+      </strong>
+      . Hash functions are designed for different tasks, such as producing fixed-size digests with preimage and collision resistance; avalanche-style diffusion is a useful hash-analysis property. Elliptic-curve multiplication instead preserves the algebraic group relationship between keys.
+     </p>
+<p>
+<strong>
+       The main lesson is to match each measurement to the property being studied.
+      </strong>
+      The forward calculation demonstrates how a public key is obtained. Frequencies, entropy and correlations describe our experimental output. Neither an attractive-looking histogram nor a low correlation coefficient proves that a system is one-way or cryptographically secure. This distinction prepares us for Homework 2, where public-key cryptography, key derivation, hashing and checksums have different roles in the Ethereum wallet pipeline.
+     </p>
+</div>
+<div class="bottom-note">
+<div>
+<span class="eyebrow">
+       SCOPE OF THE HOMEWORK
+      </span>
+<p>
+       The toy curve is a teaching tool. All numerical results depend on the chosen base point and sample; they are not security guarantees.
+      </p>
+</div>
+<a class="back-top" href="#top">
+      Back to top ↑
+     </a>
+</div>
+</section>
+</main>
+<div class="explanation-overlay" hidden="" id="explanation-overlay">
+<div aria-hidden="true" class="explanation-backdrop" data-close-modal="true">
+</div>
+<section aria-describedby="explanation-description" aria-labelledby="explanation-title" aria-modal="true" class="explanation-dialog" role="dialog" tabindex="-1">
+<div class="explanation-dialog-header">
+<span class="dialog-eyebrow">
+      STATISTICS EXPLAINED
+     </span>
+<button aria-label="Close explanation" class="modal-close" id="close-explanation" type="button">
+      ✕
+     </button>
+</div>
+<h2 id="explanation-title">
+     Reading this experiment
+    </h2>
+<div class="explanation-content" id="explanation-description">
+</div>
+<div class="explanation-dialog-footer">
+<span>
+      Homework 01 · Statistical exploration
+     </span>
+<button class="btn btn-primary" id="close-explanation-bottom" type="button">
+      Back to charts
+      <span aria-hidden="true">
+       ↗
+      </span>
+</button>
+</div>
+</section>
+</div>
+<footer>
+<div class="page-shell footer-content">
+<span>
+     ECC Laboratory
+     <span class="footer-muted">
+      — Statistics Homework 01
+     </span>
+</span>
+<span>
+     Educational demo · No wallet keys stored or generated
+    </span>
+</div>
+</footer>
+</body>
+</html>

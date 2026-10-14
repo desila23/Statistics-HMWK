@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7f8fb">
+<meta name="description" content="Statistics homework 2: an interactive educational pipeline from BIP-39 mnemonic to an Ethereum checksummed address, with statistical experiments.">
+<title>From Wallet Seed to Ethereum Address — Statistics Homework 2</title>
+<link rel="stylesheet" href="css/base-hw1.css"><link rel="stylesheet" href="css/style.css">
+<script defer src="js/crypto.js"></script><script defer src="js/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="nav-shell">
+  <a class="brand" href="#top" aria-label="Ethereum Laboratory home"><span class="brand-icon">E</span><span>Ethereum <b>Laboratory</b></span></a>
+  <nav aria-label="Sections"><a href="#pipeline">Pipeline</a><a href="#statistics">Statistics</a><a href="#conclusions">Conclusions</a></nav>
+  <div class="nav-actions"><span class="course-tag">STATISTICS / HW 02</span><button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to dark theme"><span class="theme-icon">☾</span><span class="theme-label">Dark</span></button></div>
+</div></header>
+<main class="page-shell" id="top">
+<section class="hero wallet-hero" aria-labelledby="main-title">
+  <div class="eyebrow"><span class="status-dot"></span> INTERACTIVE CRYPTOGRAPHY LAB <span class="eyebrow-line"></span> HOMEWORK 02</div>
+  <h1 id="main-title">From Wallet Seed <span class="hero-arrow">→</span> <em>Ethereum Address</em></h1>
+  <p class="hero-description">How do twelve recovery words become an Ethereum address? Follow the real cryptographic steps, examine what each one does, and measure the patterns in their outputs.</p>
+  <div class="hero-actions"><a class="btn btn-primary" href="#pipeline">Explore the pipeline <span aria-hidden="true">↗</span></a><a class="text-link" href="#how-it-works">How does it work? <span aria-hidden="true">↓</span></a></div>
+</section>
+<section class="metric-strip" aria-label="Key facts">
+  <div class="metric"><span class="metric-label">RECOVERY PHRASE</span><strong>12 words</strong><span class="metric-note">public demonstration only</span></div>
+  <div class="metric"><span class="metric-label">BIP-39 SEED</span><strong>512 bits</strong><span class="metric-note">PBKDF2 + HMAC-SHA512</span></div>
+  <div class="metric"><span class="metric-label">ETHEREUM PATH</span><strong class="metric-path">m/44'/60'</strong><span class="metric-note">/0'/0/0 · BIP-44</span></div>
+  <div class="metric"><span class="metric-label">ETHEREUM ADDRESS</span><strong>160 bits</strong><span class="metric-note">20 bytes + EIP-55 casing</span></div>
+</section>
+<section id="how-it-works" class="section intro-section">
+  <div class="section-heading"><span class="section-index">01 / THE IDEA</span><h2>One phrase in.<br><span class="soft-heading">An address out.</span></h2><p>An Ethereum wallet uses different cryptographic tools because it has several different jobs. The words are a backup; the private key authorizes actions; and the public address identifies an account.</p></div>
+  <div class="theory-copy body-prose">
+    <p>A <strong>mnemonic phrase</strong> is a readable representation of randomly generated secret data. For example, 128 random bits plus 4 checksum bits can be divided into twelve 11-bit groups, each selecting a word from a 2048-word list. With BIP-39, that phrase and an optional passphrase deterministically produce a 512-bit seed. BIP-32 turns the seed into a tree of keys, while BIP-44 gives that tree a familiar structure.</p>
+    <p>From a selected private key, <strong>secp256k1</strong> calculates a public key using the same kind of elliptic-curve multiplication explored in Homework 1. Ethereum then hashes the public-key coordinates with <strong>Keccak-256</strong>, keeps the final 20 bytes, and applies <strong>EIP-55</strong> to make transcription mistakes easier to detect.</p>
+    <p><strong>Important:</strong> these steps are deterministic, but they do not all perform hashing. Key derivation, public-key computation, hashing, checksums, and encoding are different operations with different goals.</p>
+  </div>
+  <div class="history-teaser panel"><span class="history-icon">↗</span><div><strong>How did we get here?</strong><p>From RSA in 1977 to Ethereum's checksum addresses in 2016. The historical context helps explain why the pipeline combines older and newer ideas.</p></div><button class="btn btn-outline" id="open-history" type="button">View timeline <span aria-hidden="true">↗</span></button></div>
+</section>
+<section class="section pipeline-section" id="pipeline">
+  <div class="section-heading"><span class="section-index">02 / LIVE PIPELINE</span><h2>Follow the data.<br><span class="soft-heading">One step at a time.</span></h2><p>This is not a fake diagram: the browser computes a BIP-39 seed, derives real BIP-32 child keys, multiplies a point on secp256k1 and builds a valid Ethereum address. We use only public demo phrases, never your own wallet secrets.</p></div>
+  <div class="lab-inputs panel">
+    <div class="lab-head"><div><strong>Experiment setup</strong><p>Choose one of two publicly known test mnemonics. Change the account index to obtain another derived address.</p></div><span class="demo-pill">TEST VECTORS ONLY</span></div>
+    <div class="lab-field-grid"><label>Demo mnemonic<select id="mnemonic-select"><option value="a">Demo A — “abandon … about”</option><option value="b">Demo B — “test … junk”</option></select></label><label>Account index (last path level)<input id="account-index" type="number" min="0" max="19" step="1" value="0" inputmode="numeric"></label><button type="button" class="btn btn-primary" id="run-pipeline">Derive address <span aria-hidden="true">→</span></button></div>
+    <div class="mnemonic-display"><span>PUBLIC TEST MNEMONIC · NOT A REAL WALLET</span><code id="mnemonic-value">abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about</code></div>
+    <p class="form-error" id="pipeline-error" role="alert" hidden></p>
+  </div>
+  <div class="live-grid">
+    <div class="panel pipeline-list"><div class="panel-top"><div><strong class="panel-heading">Cryptographic stages</strong><p class="panel-subtitle">Select a stage to see its output and purpose.</p></div><span class="panel-number">01–06</span></div>
+      <div class="stage-buttons" id="stage-buttons">
+        <button type="button" class="stage-btn active" data-stage="0"><span class="stage-number">01</span><span><strong>BIP-39</strong><small>Mnemonic → seed</small></span><span class="stage-chevron">→</span></button>
+        <button type="button" class="stage-btn" data-stage="1"><span class="stage-number">02</span><span><strong>BIP-32</strong><small>Master extended key</small></span><span class="stage-chevron">→</span></button>
+        <button type="button" class="stage-btn" data-stage="2"><span class="stage-number">03</span><span><strong>BIP-44</strong><small>Derivation path</small></span><span class="stage-chevron">→</span></button>
+        <button type="button" class="stage-btn" data-stage="3"><span class="stage-number">04</span><span><strong>secp256k1</strong><small>Private → public</small></span><span class="stage-chevron">→</span></button>
+        <button type="button" class="stage-btn" data-stage="4"><span class="stage-number">05</span><span><strong>Keccak-256</strong><small>Public → address</small></span><span class="stage-chevron">→</span></button>
+        <button type="button" class="stage-btn" data-stage="5"><span class="stage-number">06</span><span><strong>EIP-55</strong><small>Checksummed address</small></span><span class="stage-chevron">→</span></button>
+      </div>
+    </div>
+    <div class="panel stage-detail" id="stage-detail" aria-live="polite">
+      <div class="stage-topline"><span class="section-index" id="stage-label">01 / BIP-39</span><span class="stage-ready" id="stage-ready">Computing…</span></div>
+      <h3 id="stage-title">Mnemonic to seed</h3><p class="stage-copy" id="stage-summary">This stage converts the public test words into a binary seed.</p>
+      <div class="stage-datum"><div class="datum-head"><span id="stage-value-label">BIP-39 seed · 64 bytes</span><button type="button" id="copy-stage" class="copy-small" disabled>Copy</button></div><code id="stage-value">Computing…</code></div>
+      <p class="stage-explanation" id="stage-explanation">PBKDF2-HMAC-SHA512 is applied for 2048 iterations.</p>
+      <div class="stage-stepper"><button type="button" id="stage-back" class="btn btn-outline">← Previous</button><span id="stage-counter">1 / 6</span><button type="button" id="stage-next" class="btn btn-primary">Next stage →</button></div>
+    </div>
+  </div>
+  <div class="final-result panel"><div><span class="result-small">FINAL OUTPUT · ETHEREUM ADDRESS</span><strong id="final-address">Calculating address…</strong><p id="final-path">m/44'/60'/0'/0/0</p></div><button id="copy-address" type="button" class="btn btn-secondary" disabled>Copy address</button></div>
+  <p class="small-caution"><strong>Safety:</strong> the sample phrases are public, so their private keys are public too. They have no security. This educational page is not an audited wallet and must never receive your real recovery phrase.</p>
+</section>
+<section class="section operations-section" id="operations">
+  <div class="section-heading"><span class="section-index">03 / DIFFERENT JOBS</span><h2>Not one algorithm.<br><span class="soft-heading">Six different roles.</span></h2><p>The terms “key generation”, “key derivation”, “public-key cryptography”, “hashing”, “checksum”, and “encoding” describe different operations. Keeping them separate is part of the homework.</p></div>
+  <div class="operations-table-wrap panel"><table class="operations-table"><thead><tr><th>Operation</th><th>Purpose</th><th>Where it appears</th></tr></thead><tbody>
+  <tr><td><strong>Key generation</strong></td><td>Create fresh, unpredictable secret entropy.</td><td>Before the mnemonic is produced.</td></tr>
+  <tr><td><strong>Key derivation</strong></td><td>Deterministically produce related keys from a seed.</td><td>BIP-39 / BIP-32 / BIP-44.</td></tr>
+  <tr><td><strong>Public-key cryptography</strong></td><td>Calculate a public key and support digital signatures.</td><td>secp256k1.</td></tr>
+  <tr><td><strong>Hashing</strong></td><td>Map data to a fixed-length digest.</td><td>Keccak-256; SHA-256 in mnemonic checksum.</td></tr>
+  <tr><td><strong>Checksum</strong></td><td>Detect some accidental mistakes, not secure an account.</td><td>BIP-39 checksum and EIP-55 casing.</td></tr>
+  <tr><td><strong>Encoding</strong></td><td>Represent bytes as words or hexadecimal characters.</td><td>Mnemonic words and <code>0x</code> address format.</td></tr>
+  </tbody></table></div>
+  <div class="hash-comparison panel"><div><span class="section-index">HASH FAMILY</span><h3>SHA-512, Keccak-256 and SHA3-256 are not interchangeable.</h3><p>SHA-512 belongs to SHA-2 and is used inside PBKDF2/HMAC in BIP-39 and BIP-32. Ethereum uses Keccak-256 for addresses. Standard SHA3-256 comes from the Keccak design, but uses a different domain-separation suffix, so the digest is different.</p></div><div class="hash-playground"><label for="hash-text">Try hashing the same text</label><input id="hash-text" value="Ethereum" maxlength="100" spellcheck="false"><button id="hash-run" type="button" class="btn btn-outline">Compare digests</button><div><span>Ethereum Keccak-256</span><code id="hash-keccak"></code></div><div><span>NIST SHA3-256</span><code id="hash-sha3"></code></div></div></div>
+</section>
+<section class="section statistics-section" id="statistics">
+  <div class="section-heading"><span class="section-index">04 / STATISTICAL EXPLORATION</span><h2>Look for patterns.<br><span class="soft-heading">Explain what they mean.</span></h2><p>We analyze real outputs, but do not confuse a descriptive experiment with a security proof. The charts below are interactive: select a panel to understand its measurement and limitations.</p></div>
+  <div class="stats-toolbar panel"><div><label for="stats-samples">Number of derived demo accounts</label><div class="stats-inline"><input id="stats-samples" type="number" min="4" max="32" value="12" step="1"><button id="stats-run" type="button" class="btn btn-primary">Run experiments →</button></div></div><div><span class="stats-toolbar-name">ALSO MEASURED</span><strong>Keccak avalanche</strong><p id="stats-progress" aria-live="polite">Ready to compare address frequencies and input-bit flips.</p></div></div>
+  <div class="stats-summary" id="stats-summary" aria-live="polite"><div class="summary-tile"><span>ADDRESSES</span><strong id="stat-count">—</strong><small>derived from one demo mnemonic</small></div><div class="summary-tile"><span>ADDRESS BIT 1s</span><strong id="stat-ones">—</strong><small>ideal reference: around 50%</small></div><div class="summary-tile"><span>KECCAK CHANGED BITS</span><strong id="stat-avalanche">—</strong><small>average out of 256</small></div><div class="summary-tile"><span>AVALANCHE TRIALS</span><strong id="stat-trials">—</strong><small>controlled 1-bit input changes</small></div></div>
+  <div class="stat-grid">
+    <button class="panel stat-card" data-explain="hex" type="button"><div class="chart-top"><span class="chart-index">A / 01</span><span class="info-mark" aria-hidden="true">ⓘ</span></div><h3>Hex digit frequency</h3><p>Count the hexadecimal digits 0–f in the derived addresses.</p><div class="mini-chart" id="hex-chart" aria-label="Hexadecimal digit frequency chart"></div><span class="tap-hint">Select to understand this chart →</span></button>
+    <button class="panel stat-card" data-explain="bits" type="button"><div class="chart-top"><span class="chart-index">B / 02</span><span class="info-mark" aria-hidden="true">ⓘ</span></div><h3>Address bit distribution</h3><p>How often do the 160 address bits equal 0 or 1?</p><div class="bit-bars" id="bit-chart"></div><span class="tap-hint">Select to understand this chart →</span></button>
+    <button class="panel stat-card" data-explain="avalanche" type="button"><div class="chart-top"><span class="chart-index">C / 03</span><span class="info-mark" aria-hidden="true">ⓘ</span></div><h3>Keccak avalanche effect</h3><p>Flip one input bit, then count changed output bits.</p><div class="mini-chart avalanche-chart" id="avalanche-chart"></div><span class="tap-hint">Select to understand this chart →</span></button>
+    <button class="panel stat-card" data-explain="checksums" type="button"><div class="chart-top"><span class="chart-index">D / 04</span><span class="info-mark" aria-hidden="true">ⓘ</span></div><h3>EIP-55 capitalization</h3><p>How many hexadecimal letters are uppercase in a checksummed address?</p><div class="checksum-chart"><strong id="checksum-average">—</strong><span>mean uppercase letters per address</span><div class="pair-meter"><span id="checksum-lower-bar"></span><span id="checksum-upper-bar"></span></div><div class="pair-legend"><span>lowercase <b id="checksum-lower">—</b></span><span>uppercase <b id="checksum-upper">—</b></span></div></div><span class="tap-hint">Select to understand this chart →</span></button>
+  </div>
+  <p class="stats-bottom-note">These experiments use a short list of related demo keys, so apparent uniformity or a good average cannot prove independence, unpredictability or cryptographic security.</p>
+</section>
+<section class="section conclusions-section" id="conclusions">
+  <div class="section-heading"><span class="section-index">05 / INTERPRETATION</span><h2>Why the pipeline<br><span class="soft-heading">needs different tools.</span></h2><p>Our main finding is not that one operation is better than another. It is that each has a different responsibility, and statistics must be interpreted in that context.</p></div>
+  <div class="conclusion-prose body-prose"><p class="lead-conclusion">A mnemonic is useful because humans can back up words more easily than long binary strings. But its security comes from the initial random entropy, not from the appearance of the words. BIP-39 turns the phrase into a repeatable seed, while BIP-32 and BIP-44 let a wallet organize multiple accounts without independently inventing a new secret for every address.</p>
+  <p>Scalar multiplication on secp256k1 connects a private scalar to a public point, the relationship used in elliptic-curve signatures. Keccak-256 then converts public-key bytes into a fixed-length digest, from which Ethereum takes the last 20 bytes to form an address. EIP-55 only changes the address's letter casing so some transcription mistakes can be detected; it does not add entropy or make the private key harder to guess.</p>
+  <p>Our statistical experiments describe the behavior we observe. Close-to-balanced bits and digit frequencies are consistent with the outputs looking dispersed, while a one-bit change typically alters many Keccak output bits. However, a small sample does not prove security, and different algorithms do not need to share the same statistical properties. In particular, key derivation and checksums should not be judged as if they were hash functions.</p>
+  <p>Taken together, the two homeworks tell one story: Homework 1 examined the mathematical step from private to public key, while this homework shows where that private key comes from and how the public key becomes a usable Ethereum address. A practical wallet relies on multiple well-defined primitives because no single algorithm can correctly perform all these tasks.</p></div>
+<div class="reference-line"><strong>Primary sources:</strong> <a href="https://bips.dev/39/" target="_blank" rel="noopener noreferrer">BIP-39</a> · <a href="https://bips.dev/32/" target="_blank" rel="noopener noreferrer">BIP-32</a> · <a href="https://bips.dev/44/" target="_blank" rel="noopener noreferrer">BIP-44</a> · <a href="https://eips.ethereum.org/EIPS/eip-55" target="_blank" rel="noopener noreferrer">EIP-55</a> · <a href="https://keccak.team/keccak_specs_summary.html" target="_blank" rel="noopener noreferrer">Keccak / SHA-3</a></div>
+</section>
+<footer class="hw2-footer"><span>STATISTICS · HOMEWORK 02</span><span>Educational demonstration · Never use real recovery phrases</span><a href="#top">Back to top ↑</a></footer>
+</main>
+<div class="hw2-overlay" id="dialog-overlay" hidden><div class="hw2-backdrop" data-dismiss="true"></div><section class="hw2-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabindex="-1"><div class="dialog-head"><span id="dialog-category" class="section-index">MORE CONTEXT</span><button type="button" class="modal-close" id="dialog-close" aria-label="Close dialog">✕</button></div><h2 id="dialog-title">Explanation</h2><div class="dialog-body" id="dialog-body"></div><div class="dialog-foot"><span>Ethereum Laboratory · HW 02</span><button type="button" class="btn btn-outline" id="dialog-done">Close</button></div></section></div>
+</body></html>
