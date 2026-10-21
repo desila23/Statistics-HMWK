@@ -1,0 +1,1 @@
+{"name":"statistics-hw2-repost","version":"1.0.0","private":true,"type":"module","scripts":{"build:vendor":"esbuild vendor/entry.js --bundle --format=esm --minify --legal-comments=linked --outfile=vendor/noble.js","test":"node tests/run.mjs"},"devDependencies":{"@noble/curves":"2.0.1","esbuild":"0.25.12"}}

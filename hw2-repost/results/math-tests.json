@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "assertions": 1806,
+  "checks": [
+    "Caesar: all 26 shifts; complete uppercase/lowercase alphabet; UTF-8, whitespace, punctuation and empty input.",
+    "Curve: SEC 2 generator, p/n parameters, six public keys independently cross-checked with Node/OpenSSL; invalid scalars rejected.",
+    "Range validation; cryptographic random keys stay within declared bounds (not a randomness proof).",
+    "ECIES-like round-trips: ASCII, multilingual/emoji, empty message, 10,000 characters; sender/receiver shared secret and AES key match; JSON envelope portable; wrong keys and altered ciphertext/salt/IV/R/Q rejected; repeated encryption uses fresh output.",
+    "Exhaustive recovery: first, batch boundary, middle and last candidate; authenticated decryption with recovered key; key outside bound not found.",
+    "Statistics: counts/normalization; χ² independently recomputed for all candidates; all 26 rotated versions recover the long example; empty alphabet rejected; deterministic ties; Wilson boundary cases.",
+    "Reference experiment: 1,600 actual ciphertext trials / 3,200 attacks; independent count aggregation; disjoint blocks within each length; paired prefixes; exact repeatability with the same seed."
+  ],
+  "elapsedMs": 1511.971646,
+  "runtime": "v24.19.0"
+}
