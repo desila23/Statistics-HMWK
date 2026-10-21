@@ -31,5 +31,7 @@ PASS Statistical worker exactly matches reference rows
 PASS Raw trial count matches reference
 PASS All trial inputs and recovered keys match exactly; floating-point scores match within tolerance
 Maximum absolute browser/Node score difference: 5.684341886080802e-14
-SKIP Browser ECDH/HKDF/AES-GCM round-trip: insecure HTTP preview has no crypto.subtle. Node tests cover the same shipped code.
-DONE: 32 checks passed.
+PASS Browser encryption/decryption
+PASS Browser rejects wrong private key
+DONE: 34 checks passed.
+
