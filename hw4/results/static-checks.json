@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "html_links_and_unique_ids": [
+    "index.html",
+    "hw4/index.html",
+    "hw4/tests/browser.html"
+  ],
+  "javascript_syntax": "All four source modules passed node --check",
+  "previous_homework_directories": "unchanged against 9991c22",
+  "diff_whitespace": "PASS"
+}

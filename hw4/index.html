@@ -1,0 +1,1376 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f7f8fb" />
+    <meta
+      name="description"
+      content="Statistics Homework 4: reproducible Bernoulli and Rademacher penetration processes, the law of large numbers, variance scaling and the central limit theorem."
+    />
+    <title>Stochastic Penetration Processes — LLN and CLT</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem("statsTheme") ||
+          (matchMedia("(prefers-color-scheme:dark)").matches
+            ? "dark"
+            : "light");
+      } catch (e) {}
+    </script>
+    <script defer src="vendor/chart.umd.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#lab">Skip to simulation</a>
+    <header class="topbar">
+      <div class="nav-shell">
+        <a class="brand" href="#top"
+          ><span class="brand-icon">Σ</span
+          ><span>Statistics <b>Laboratory</b></span></a
+        >
+        <nav aria-label="Sections">
+          <a href="#models">Models</a><a href="#lab">Simulation</a
+          ><a href="#lln">LLN</a><a href="#variance">Variance</a
+          ><a href="#clt">CLT</a><a href="#sampling">n & m</a>
+        </nav>
+        <button id="theme" class="theme" aria-label="Switch color theme">
+          ◐ <span>Theme</span>
+        </button>
+      </div>
+    </header>
+    <main id="top" class="shell">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">
+            <span class="dot"></span> STATISTICS / HOMEWORK 04
+          </div>
+          <h1>Random steps.<br /><em>Predictable patterns.</em></h1>
+          <p class="hero-description">
+            Stochastic Penetration Processes — LLN and CLT.<br />Follow
+            individual attackers, then measure what emerges when the number of
+            systems and trajectories grows.
+          </p>
+          <div class="actions">
+            <a class="btn primary" href="#lab"
+              >Run the simulation <span>↗</span></a
+            ><a class="text-link" href="#clt">See the CLT experiment ↓</a>
+          </div>
+        </div>
+        <div class="hero-board">
+          <div class="board-top">
+            <span>ONE STEP AT A TIME</span><span class="dot"></span>
+          </div>
+          <div
+            class="walk-illustration"
+            aria-label="Illustrative Rademacher paths on a grid"
+          >
+            <svg viewBox="0 0 430 205" role="img">
+              <title>
+                Illustrative random walk; measured simulation charts are below.
+              </title>
+              <defs>
+                <pattern
+                  id="grid"
+                  width="43"
+                  height="41"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M43 0H0V41"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width=".5"
+                    opacity=".18"
+                  />
+                </pattern>
+              </defs>
+              <rect width="430" height="205" fill="url(#grid)" />
+              <path
+                d="M0 123H430"
+                stroke="currentColor"
+                opacity=".25"
+                stroke-dasharray="4 5"
+              />
+              <path
+                d="M0 123L43 82L86 123L129 82L172 41L215 82L258 41L301 82L344 41L387 82L430 41"
+                class="walk-one"
+              />
+              <path
+                d="M0 123L43 164L86 123L129 164L172 123L215 164L258 123L301 82L344 123L387 82L430 123"
+                class="walk-two"
+              />
+              <circle cx="430" cy="41" r="5" fill="var(--teal)" />
+              <circle cx="430" cy="123" r="5" fill="var(--violet)" />
+            </svg>
+          </div>
+          <div class="board-caption">
+            <span>n systems → steps per path</span
+            ><span>m attackers → independent paths</span>
+          </div>
+          <div class="board-foot">
+            ILLUSTRATIVE PATHS · LIVE CALCULATIONS BELOW
+          </div>
+        </div>
+      </section>
+      <div class="metrics">
+        <div>
+          <small>TWO INCREMENT MODELS</small><strong>0 / 1 & −1 / +1</strong
+          ><span>Bernoulli and Rademacher</span>
+        </div>
+        <div>
+          <small>THREE OBSERVABLES</small><strong>Sₙ · Sₙ/n · Sₙ/√n</strong
+          ><span>different scales, different limits</span>
+        </div>
+        <div>
+          <small>ONE KEY DISTINCTION</small><strong>n ≠ m</strong
+          ><span>path length versus ensemble size</span>
+        </div>
+        <div>
+          <small>REPEATABLE EXPERIMENTS</small><strong>Seed → same data</strong
+          ><span>worker-based Monte Carlo</span>
+        </div>
+      </div>
+      <section class="section" id="introduction">
+        <div class="section-heading">
+          <span class="eyebrow">01 / INTRODUCTION</span>
+          <h2>
+            One attacker is a path.<br /><span class="soft"
+              >Many paths form a distribution.</span
+            >
+          </h2>
+          <p>
+            Consider n computer systems and m attackers. Each attacker makes
+            exactly one attempt against each system, giving n random increments
+            along one path. All m attackers follow the same increment law,
+            independently in the mathematical model.
+          </p>
+        </div>
+        <div class="intro-copy">
+          <p>
+            A <strong>stochastic process</strong> is a family of random
+            quantities indexed by time or step. Here Sₜ = X₁ + ⋯ + Xₜ is the
+            score after t systems. The increments are <strong>i.i.d.</strong>:
+            independent, so previous attempts do not change the next attempt’s
+            probability, and identically distributed, so the same law applies at
+            every step and to every attacker.
+          </p>
+          <p>
+            Bernoulli increments count successful attempts: a failure adds zero.
+            Rademacher increments model a signed score: each attempt adds +1 or
+            −1 with equal probability. A negative Rademacher score is a net
+            signed score, not a negative number of compromised systems. We study
+            the total, the running average and the square-root-normalized score
+            because each highlights a different aspect of randomness.
+          </p>
+        </div>
+        <div class="callout">
+          <span>i</span>
+          <p>
+            <strong
+              >A mathematical model, not an intrusion-detection system.</strong
+            >
+            Real attacks share vulnerabilities and respond to changing defences.
+            These dependencies and changing success rates are deliberately
+            excluded here.
+          </p>
+        </div>
+      </section>
+      <section class="section" id="models">
+        <div class="section-heading">
+          <span class="eyebrow">02 / STOCHASTIC MODELS</span>
+          <h2>
+            Choose the increments.<br /><span class="soft"
+              >Know their mean and variance.</span
+            >
+          </h2>
+          <p>
+            The formulas below describe one attacker. The index n counts its
+            steps; m tells us how many independent copies we observe.
+          </p>
+        </div>
+        <div class="two-grid model-grid">
+          <article class="panel">
+            <span class="tag">BERNOULLI(p)</span>
+            <h3>Count successes.</h3>
+            <div class="formula">
+              Xᵢ ∈ {0, 1}<br />P(Xᵢ = 1) = p · P(Xᵢ = 0) = 1 − p
+            </div>
+            <div class="model-moments">
+              <div><small>EXPECTED VALUE μ</small><strong>p</strong></div>
+              <div><small>VARIANCE σ²</small><strong>p(1 − p)</strong></div>
+            </div>
+            <p>
+              Sₙ follows a Binomial(n, p) law. It never decreases along a path.
+              At p = 0 or 1 the process is deterministic and all three variances
+              are zero.
+            </p>
+          </article>
+          <article class="panel">
+            <span class="tag violet">SYMMETRIC RADEMACHER</span>
+            <h3>Balance gains and losses.</h3>
+            <div class="formula">
+              Xᵢ ∈ {−1, +1}<br />P(Xᵢ = +1) = P(Xᵢ = −1) = ½
+            </div>
+            <div class="model-moments">
+              <div><small>EXPECTED VALUE μ</small><strong>0</strong></div>
+              <div><small>VARIANCE σ²</small><strong>1</strong></div>
+            </div>
+            <p>
+              If K is Binomial(n, ½), then Sₙ = 2K − n. Scores have the same
+              parity as n and lie on a lattice with spacing 2. Individual paths
+              can move in either direction.
+            </p>
+          </article>
+        </div>
+        <div class="panel table-wrap">
+          <table>
+            <caption>
+              Theory for one attacker with i.i.d. increments of mean μ and
+              variance σ².
+            </caption>
+            <thead>
+              <tr>
+                <th>Quantity</th>
+                <th>Expected value</th>
+                <th>Variance</th>
+                <th>What changes with n?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>Total Sₙ</th>
+                <td>nμ</td>
+                <td>nσ²</td>
+                <td>Absolute fluctuations grow on the √n scale.</td>
+              </tr>
+              <tr>
+                <th>Average Sₙ/n</th>
+                <td>μ</td>
+                <td>σ²/n</td>
+                <td>The distribution concentrates around μ.</td>
+              </tr>
+              <tr>
+                <th>Normalized total Sₙ/√n</th>
+                <td>μ√n</td>
+                <td>σ²</td>
+                <td>The variance stays constant; the mean need not.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <details class="disclosure">
+          <summary>Why does dividing by n differ from dividing by √n?</summary>
+          <p>
+            Independence makes variances add: Var(Sₙ) = Σ Var(Xᵢ) = nσ². Scaling
+            a random variable by a multiplies its variance by a². Consequently,
+            dividing Sₙ by n divides its variance by n², leaving σ²/n. Dividing
+            by √n divides it by n, leaving σ². These identities hold for every
+            finite n, before any limiting theorem is used.
+          </p>
+        </details>
+      </section>
+      <section class="section" id="lab">
+        <div class="section-heading">
+          <span class="eyebrow">03 / INTERACTIVE SIMULATION LAB</span>
+          <h2>
+            Make the random paths.<br /><span class="soft"
+              >Inspect their final scores.</span
+            >
+          </h2>
+          <p>
+            <strong>What are we measuring?</strong> The trajectories of
+            individual attackers and the empirical distribution of their final
+            scores. Change the inputs, run, then compare measured moments with
+            the exact formulas.
+          </p>
+        </div>
+        <div class="lab-grid">
+          <aside class="panel controls">
+            <div class="panel-heading">
+              <h3>Experiment setup</h3>
+              <span class="tag">SEEDED</span>
+            </div>
+            <form id="lab-form">
+              <label for="lab-model">Increment model</label
+              ><select id="lab-model" name="model">
+                <option value="rademacher">Rademacher · symmetric ±1</option>
+                <option value="bernoulli">Bernoulli · success / failure</option>
+              </select>
+              <div class="input-grid">
+                <label
+                  >Systems n<input
+                    id="lab-n"
+                    name="n"
+                    type="number"
+                    list="n-presets"
+                    min="1"
+                    max="20000"
+                    value="1000"
+                    step="1"
+                    required /></label
+                ><label
+                  >Attackers m<input
+                    id="lab-m"
+                    name="m"
+                    type="number"
+                    list="m-presets"
+                    min="1"
+                    max="20000"
+                    value="2000"
+                    step="1"
+                    required
+                /></label>
+              </div>
+              <datalist id="n-presets">
+                <option value="10"></option>
+                <option value="30"></option>
+                <option value="100"></option>
+                <option value="300"></option>
+                <option value="1000"></option></datalist
+              ><datalist id="m-presets">
+                <option value="50"></option>
+                <option value="100"></option>
+                <option value="500"></option>
+                <option value="1000"></option>
+                <option value="5000"></option>
+              </datalist>
+              <p class="field-help">
+                Choose a preset or type a custom integer. Up to 20,000 systems /
+                attackers, with n × m ≤ 100 million.
+              </p>
+              <div class="p-field" id="lab-p-field" hidden>
+                <label
+                  >Success probability p<input
+                    id="lab-p"
+                    name="p"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="any"
+                    value="0.5"
+                /></label>
+              </div>
+              <label
+                >Random seed · unsigned 32-bit<input
+                  id="lab-seed"
+                  name="seed"
+                  type="number"
+                  min="0"
+                  max="4294967295"
+                  value="20261028"
+                  step="1"
+                  required
+              /></label>
+              <div class="actions wrap">
+                <button class="btn primary" type="submit" id="lab-run">
+                  Run Simulation →</button
+                ><button
+                  class="btn outline"
+                  type="button"
+                  id="lab-stop"
+                  disabled
+                >
+                  Stop
+                </button>
+              </div>
+              <div class="secondary-actions">
+                <button type="button" id="lab-reset">Reset</button
+                ><button type="button" id="lab-new-seed">
+                  New Random Seed ↻
+                </button>
+              </div>
+              <progress
+                id="lab-progress"
+                value="0"
+                max="100"
+                aria-label="Simulation progress"
+              ></progress>
+              <p id="lab-status" class="status" role="status">
+                Preparing the default simulation…
+              </p>
+            </form>
+            <div class="control-footer">
+              <small>HOW TO READ THE CHARTS</small>
+              <p>
+                Each coloured curve is one attacker. Only eight paths are
+                retained for display; all m paths contribute to the
+                distributions. Hover for values or select a legend entry to hide
+                a line.
+              </p>
+              <button id="lab-compare" class="text-button" disabled>
+                Compare the other model ↗
+              </button>
+            </div>
+          </aside>
+          <div class="path-stack">
+            <article class="panel chart-card">
+              <div class="chart-heading">
+                <div>
+                  <span class="eyebrow">A / SAMPLE TRAJECTORIES</span>
+                  <h3>Total score Sₜ</h3>
+                </div>
+                <button
+                  class="info-button"
+                  data-help="paths"
+                  aria-label="Explain sample trajectories"
+                >
+                  i
+                </button>
+              </div>
+              <div class="chart-container path-chart">
+                <canvas
+                  id="paths-chart"
+                  role="img"
+                  aria-label="Sample cumulative-score trajectories"
+                ></canvas>
+              </div>
+              <p id="paths-note" class="chart-note">
+                Live paths appear after simulation.
+              </p>
+            </article>
+            <article class="panel chart-card">
+              <div class="chart-heading">
+                <div>
+                  <span class="eyebrow">B / RUNNING AVERAGE</span>
+                  <h3>Does the average settle?</h3>
+                </div>
+                <button
+                  class="info-button"
+                  data-help="averages"
+                  aria-label="Explain running averages"
+                >
+                  i
+                </button>
+              </div>
+              <div class="chart-container path-chart">
+                <canvas
+                  id="averages-chart"
+                  role="img"
+                  aria-label="Running averages with theoretical mean reference"
+                ></canvas>
+              </div>
+              <p id="averages-note" class="chart-note">
+                The reference line marks the expected increment μ.
+              </p>
+            </article>
+          </div>
+        </div>
+        <div class="run-strip">
+          <span class="tag" id="lab-active">NO ACTIVE RUN</span>
+          <p id="lab-description">
+            Every displayed result will include its generating parameters.
+          </p>
+          <button id="lab-export" class="btn outline" disabled>
+            Export Results (CSV) ↓
+          </button>
+        </div>
+        <div class="three-grid distribution-grid">
+          <article class="panel chart-card">
+            <div class="chart-heading">
+              <div>
+                <span class="eyebrow">C / FINAL DISTRIBUTION</span>
+                <h3>Total score</h3>
+              </div>
+              <button
+                class="info-button"
+                data-help="histogram"
+                aria-label="Explain total-score density histogram"
+              >
+                i
+              </button>
+            </div>
+            <div class="chart-container">
+              <canvas
+                id="total-chart"
+                role="img"
+                aria-label="Final total-score density histogram"
+              ></canvas>
+            </div>
+            <p id="total-note" class="chart-note"></p>
+          </article>
+          <article class="panel chart-card">
+            <div class="chart-heading">
+              <div>
+                <span class="eyebrow">D / FINAL DISTRIBUTION</span>
+                <h3>Average score</h3>
+              </div>
+              <button
+                class="info-button"
+                data-help="histogram"
+                aria-label="Explain average-score density histogram"
+              >
+                i
+              </button>
+            </div>
+            <div class="chart-container">
+              <canvas
+                id="average-chart"
+                role="img"
+                aria-label="Final average-score density histogram"
+              ></canvas>
+            </div>
+            <p id="average-note" class="chart-note"></p>
+          </article>
+          <article class="panel chart-card">
+            <div class="chart-heading">
+              <div>
+                <span class="eyebrow">E / FINAL DISTRIBUTION</span>
+                <h3>Normalized score</h3>
+              </div>
+              <button
+                class="info-button"
+                data-help="normalized"
+                aria-label="Explain square-root normalization"
+              >
+                i
+              </button>
+            </div>
+            <div class="chart-container">
+              <canvas
+                id="normalized-chart"
+                role="img"
+                aria-label="Final square-root-normalized density histogram"
+              ></canvas>
+            </div>
+            <p id="normalized-note" class="chart-note"></p>
+          </article>
+        </div>
+        <p class="small-note">
+          Histogram area = 1. The theoretical line shows exact discrete
+          probability mass aggregated into the same bins and divided by bin
+          width; it is not a Gaussian fit. Exact tails may extend beyond the
+          observed plotting range.
+        </p>
+        <div class="panel summary-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">STATISTICAL SUMMARY</span>
+              <h3>Measured versus expected</h3>
+            </div>
+            <span class="tag">ALL m ATTACKERS</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Quantity</th>
+                  <th>Empirical mean</th>
+                  <th>Theoretical mean</th>
+                  <th>Mean difference</th>
+                  <th>Empirical variance</th>
+                  <th>Theoretical variance</th>
+                  <th>Variance difference</th>
+                </tr>
+              </thead>
+              <tbody id="lab-summary"></tbody>
+            </table>
+          </div>
+          <p class="small-note">
+            Empirical variance uses the unbiased denominator m − 1. It is
+            undefined for m = 1. Differences are empirical minus theoretical;
+            sampling variation is expected.
+          </p>
+          <details>
+            <summary>Inspect a displayed attacker step by step</summary>
+            <div class="path-inspector">
+              <label>Retained attacker<select id="inspect-path"></select></label
+              ><label
+                >Step t<input
+                  id="inspect-step"
+                  type="number"
+                  min="1"
+                  value="1"
+                  step="1" /></label
+              ><button id="inspect-run" class="btn outline">Inspect step</button
+              ><button id="path-export" class="text-button">
+                Download this full path ↓
+              </button>
+            </div>
+            <div id="inspect-output" class="formula"></div>
+          </details>
+        </div>
+      </section>
+      <section class="section" id="lln">
+        <div class="section-heading">
+          <span class="eyebrow">04 / LAW OF LARGE NUMBERS</span>
+          <h2>
+            Longer paths.<br /><span class="soft"
+              >Less uncertainty in the average.</span
+            >
+          </h2>
+          <p>
+            <strong>What are we measuring?</strong> How the distribution of Sₙ/n
+            concentrates, and how often an attacker’s average lies more than ε
+            away from μ. This experiment increases n while keeping the same m
+            trajectories.
+          </p>
+        </div>
+        <div class="panel experiment-controls">
+          <form id="sweep-form" class="toolbar">
+            <label
+              >Model<select id="sweep-model">
+                <option value="rademacher">Rademacher</option>
+                <option value="bernoulli">Bernoulli</option>
+              </select></label
+            ><label id="sweep-p-field" hidden
+              >Probability p<input
+                id="sweep-p"
+                type="number"
+                min="0"
+                max="1"
+                step="any"
+                value="0.5" /></label
+            ><label
+              >Maximum systems n<select id="sweep-n">
+                <option value="1000">1,000</option>
+                <option value="5000">5,000</option>
+              </select></label
+            ><label
+              >Attackers m<input
+                id="sweep-m"
+                type="number"
+                min="1"
+                max="20000"
+                value="5000"
+                step="1" /></label
+            ><label
+              >Seed<input
+                id="sweep-seed"
+                type="number"
+                min="0"
+                max="4294967295"
+                value="20261028"
+                step="1" /></label
+            ><label
+              >Deviation ε<input
+                id="sweep-epsilon"
+                type="number"
+                min="0.001"
+                max="2"
+                step="0.001"
+                value="0.1" /></label
+            ><button type="submit" class="btn primary" id="sweep-run">
+              Run increasing n →</button
+            ><button type="button" class="btn outline" id="sweep-stop" disabled>
+              Stop
+            </button>
+          </form>
+          <progress
+            id="sweep-progress"
+            value="0"
+            max="100"
+            aria-label="Increasing-n experiment progress"
+          ></progress>
+          <p id="sweep-status" class="status" role="status">
+            Preparing the reference sweep…
+          </p>
+          <p class="small-note">
+            Changing ε recalculates deviations from the existing samples. Model,
+            m, seed and maximum n take effect when you rerun. These settings
+            also feed the variance charts in section 05.
+          </p>
+        </div>
+        <div class="two-grid">
+          <article class="panel chart-card">
+            <div class="chart-heading">
+              <div>
+                <span class="eyebrow">ENSEMBLE MEAN</span>
+                <h3>Where is the distribution centred?</h3>
+              </div>
+              <button
+                class="info-button"
+                data-help="lln"
+                aria-label="Explain law of large numbers experiment"
+              >
+                i
+              </button>
+            </div>
+            <div class="chart-container">
+              <canvas
+                id="lln-mean-chart"
+                role="img"
+                aria-label="Empirical mean of attacker averages versus increasing n"
+              ></canvas>
+            </div>
+            <p id="lln-mean-note" class="chart-note"></p>
+          </article>
+          <article class="panel chart-card">
+            <div class="chart-heading">
+              <div>
+                <span class="eyebrow">DEVIATION PROBABILITY</span>
+                <h3>How often are we far from μ?</h3>
+              </div>
+              <button
+                class="info-button"
+                data-help="deviation"
+                aria-label="Explain deviation probability and Chebyshev bound"
+              >
+                i
+              </button>
+            </div>
+            <div class="chart-container">
+              <canvas
+                id="deviation-chart"
+                role="img"
+                aria-label="Empirical and exact deviation probabilities with Chebyshev upper bound"
+              ></canvas>
+            </div>
+            <p id="lln-deviation-note" class="chart-note"></p>
+          </article>
+        </div>
+        <div class="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Systems n</th>
+                <th>Mean of Sₙ/n</th>
+                <th>Empirical Var(Sₙ/n)</th>
+                <th>Exceedances / m</th>
+                <th>Empirical probability</th>
+                <th>95% Wilson interval</th>
+                <th>Exact probability</th>
+                <th>Chebyshev bound</th>
+              </tr>
+            </thead>
+            <tbody id="lln-table"></tbody>
+          </table>
+        </div>
+        <div class="interpretation">
+          <span class="eyebrow">RESULTS → INTERPRETATION</span>
+          <p id="lln-interpretation">
+            The measured trend will appear after the sweep.
+          </p>
+        </div>
+        <div class="actions wrap">
+          <button id="sweep-export" class="btn outline" disabled>
+            Export all checkpoint results ↓
+          </button>
+        </div>
+        <details class="disclosure">
+          <summary>The theorem, the bound and the sampling design</summary>
+          <div class="formula">
+            P(|Sₙ/n − μ| &gt; ε) → 0<br />P(|Sₙ/n − μ| &gt; ε) ≤ min(1,
+            σ²/(nε²))
+          </div>
+          <p>
+            For every fixed ε &gt; 0, the theoretical Chebyshev bound tends to
+            zero. This establishes convergence in probability under the stated
+            assumptions. The graphs illustrate this result; they do not prove
+            it. An average need not move closer to μ on every step.
+          </p>
+          <p>
+            Each attacker is simulated once up to the maximum n. Checkpoints
+            reuse prefixes of the same paths, so comparisons across n are
+            paired. At a fixed n the m attackers are the independent
+            observational units of the model. Wilson intervals describe Monte
+            Carlo uncertainty of the estimated deviation frequency; they do not
+            describe uncertainty about the known μ. A zero observed count does
+            not prove a zero probability. The finite-n exact probability comes
+            from the binomial law, not from the normal approximation.
+          </p>
+        </details>
+      </section>
+      <section class="section" id="variance">
+        <div class="section-heading">
+          <span class="eyebrow">05 / VARIANCE ANALYSIS</span>
+          <h2>
+            Three rescalings.<br /><span class="soft"
+              >Three variance laws.</span
+            >
+          </h2>
+          <p>
+            <strong>What are we measuring?</strong> Dispersion across attackers,
+            using the increasing-n experiment above. Solid curves show exact
+            theory; points show sample variances computed from the simulated
+            scores.
+          </p>
+        </div>
+        <div class="three-grid variance-grid">
+          <article class="panel chart-card">
+            <span class="eyebrow">GROWS LINEARLY</span>
+            <h3>Var(Sₙ) = nσ²</h3>
+            <div class="chart-container">
+              <canvas
+                id="variance-total-chart"
+                role="img"
+                aria-label="Total-score empirical and theoretical variances"
+              ></canvas>
+            </div>
+            <p class="chart-note">
+              Longer totals fluctuate more in absolute score units. Standard
+              deviation grows as σ√n.
+            </p>
+          </article>
+          <article class="panel chart-card">
+            <span class="eyebrow">SHRINKS AS 1/n</span>
+            <h3>Var(Sₙ/n) = σ²/n</h3>
+            <div class="chart-container">
+              <canvas
+                id="variance-average-chart"
+                role="img"
+                aria-label="Average-score empirical and theoretical variances"
+              ></canvas>
+            </div>
+            <p class="chart-note">
+              Averaging divides by n and therefore divides variance by n².
+              Relative noise contracts.
+            </p>
+          </article>
+          <article class="panel chart-card">
+            <span class="eyebrow">STAYS CONSTANT</span>
+            <h3>Var(Sₙ/√n) = σ²</h3>
+            <div class="chart-container">
+              <canvas
+                id="variance-normalized-chart"
+                role="img"
+                aria-label="Normalized-score empirical and theoretical variances"
+              ></canvas>
+            </div>
+            <p class="chart-note">
+              Square-root normalization balances the variance growth. It does
+              not centre a nonzero mean.
+            </p>
+          </article>
+        </div>
+        <p id="variance-note" class="small-note"></p>
+        <details class="disclosure">
+          <summary>Read the exact empirical and theoretical variances</summary>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>n</th>
+                  <th>Total: empirical / theory</th>
+                  <th>Average: empirical / theory</th>
+                  <th>Normalized: empirical / theory</th>
+                </tr>
+              </thead>
+              <tbody id="variance-table"></tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+      <section class="section" id="clt">
+        <div class="section-heading">
+          <span class="eyebrow">06 / CENTRAL LIMIT THEOREM</span>
+          <h2>
+            A discrete walk.<br /><span class="soft">A Gaussian limit.</span>
+          </h2>
+          <p>
+            <strong>What are we measuring?</strong> The shape of the Rademacher
+            score Zₙ = Sₙ/√n as n grows. Its mean is exactly 0 and its variance
+            exactly 1 at every n; the CLT describes the changing distribution,
+            not the moments alone.
+          </p>
+        </div>
+        <div class="panel clt-panel">
+          <form id="clt-form" class="toolbar">
+            <label
+              >Displayed systems n<input
+                id="clt-n"
+                type="number"
+                list="clt-presets"
+                min="1"
+                max="20000"
+                value="1000"
+                step="1" /></label
+            ><datalist id="clt-presets">
+              <option value="10"></option>
+              <option value="30"></option>
+              <option value="100"></option>
+              <option value="1000"></option></datalist
+            ><label
+              >Attackers m<input
+                id="clt-m"
+                type="number"
+                min="1"
+                max="20000"
+                value="5000"
+                step="1" /></label
+            ><label
+              >Seed<input
+                id="clt-seed"
+                type="number"
+                min="0"
+                max="4294967295"
+                value="20261030"
+                step="1" /></label
+            ><button type="submit" id="clt-run" class="btn primary">
+              Run CLT experiment →</button
+            ><button type="button" id="clt-stop" class="btn outline" disabled>
+              Stop
+            </button>
+          </form>
+          <progress
+            id="clt-progress"
+            value="0"
+            max="100"
+            aria-label="CLT experiment progress"
+          ></progress>
+          <p class="small-note">
+            Every run computes the standard checkpoints 10, 30, 100 and 1,000,
+            plus your requested n. Thus the simulation horizon is max(1,000,
+            requested n); the same m attackers supply all prefixes.
+          </p>
+          <p id="clt-status" class="status" role="status">
+            Preparing the Rademacher comparison…
+          </p>
+          <div
+            class="checkpoint-tabs"
+            id="clt-tabs"
+            aria-label="Choose CLT checkpoint"
+          ></div>
+          <div class="clt-layout">
+            <div>
+              <div class="chart-heading">
+                <h3 id="clt-title">Zₙ = Sₙ / √n</h3>
+                <button
+                  class="info-button"
+                  data-help="clt"
+                  aria-label="Explain CLT density comparison"
+                >
+                  i
+                </button>
+              </div>
+              <div class="chart-container clt-chart">
+                <canvas
+                  id="clt-chart"
+                  role="img"
+                  aria-label="Rademacher normalized density histogram and standard normal density"
+                ></canvas>
+              </div>
+            </div>
+            <div class="clt-stats">
+              <div>
+                <small>EMPIRICAL MEAN · THEORY 0</small
+                ><strong id="clt-mean">—</strong>
+              </div>
+              <div>
+                <small>EMPIRICAL VARIANCE · THEORY 1</small
+                ><strong id="clt-var">—</strong>
+              </div>
+              <div>
+                <small>EXACT FINITE-n CDF GAP TO Φ</small
+                ><strong id="clt-exact-gap">—</strong>
+              </div>
+              <div>
+                <small>EMPIRICAL CDF GAP TO Φ</small
+                ><strong id="clt-emp-gap">—</strong>
+              </div>
+            </div>
+          </div>
+          <p id="clt-note" class="chart-note"></p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>n</th>
+                  <th>Lattice spacing 2/√n</th>
+                  <th>Mean / theory</th>
+                  <th>Variance / theory</th>
+                  <th>Exact CDF gap</th>
+                  <th>Empirical CDF gap</th>
+                </tr>
+              </thead>
+              <tbody id="clt-table"></tbody>
+            </table>
+          </div>
+          <p class="small-note">
+            CDF gaps are descriptive suprema, including both sides of each
+            discrete jump. No Kolmogorov–Smirnov p-value is claimed. The exact
+            gap separates finite-n discreteness from Monte Carlo noise.
+          </p>
+          <div class="actions wrap">
+            <button id="clt-export" class="btn outline" disabled>
+              Export displayed CLT checkpoint ↓
+            </button>
+          </div>
+        </div>
+        <div class="two-grid theorem-grid">
+          <article class="panel">
+            <span class="tag">RADEMACHER CLT</span>
+            <h3>Convergence in distribution</h3>
+            <math display="block"
+              ><mrow
+                ><mfrac
+                  ><msub><mi>S</mi><mi>n</mi></msub
+                  ><msqrt><mi>n</mi></msqrt></mfrac
+                ><mover><mo>→</mo><mi>d</mi></mover
+                ><mi mathvariant="normal">N</mi><mo>(</mo><mn>0</mn><mo>,</mo
+                ><mn>1</mn><mo>)</mo></mrow
+              ></math
+            >
+            <p>
+              At every finite n the score remains discrete. Convergence in
+              distribution means that P(Zₙ ≤ x) approaches Φ(x) at each
+              continuity point of the limiting CDF. It does not mean that Zₙ
+              converges in probability to 0. Its variance stays 1.
+            </p>
+            <div class="formula">φ(x) = exp(−x²/2) / √(2π)</div>
+            <p>
+              The displayed Gaussian is the standard normal density, with no
+              fitted parameters. Histogram bars are densities too, so their
+              total area is one.
+            </p>
+          </article>
+          <article class="panel">
+            <span class="tag violet">BERNOULLI DISTINCTION</span>
+            <h3>Normalizing is not centring.</h3>
+            <p>
+              For Bernoulli with p &gt; 0, E[Sₙ/√n] = p√n grows. That uncentred
+              quantity does not converge to N(0, 1). For fixed 0 &lt; p &lt; 1,
+              the correctly centred and standardized variable is:
+            </p>
+            <math display="block"
+              ><mrow
+                ><mfrac
+                  ><mrow
+                    ><msub><mi>S</mi><mi>n</mi></msub
+                    ><mo>−</mo><mi>n</mi><mi>p</mi></mrow
+                  ><msqrt
+                    ><mrow
+                      ><mi>n</mi><mi>p</mi><mo>(</mo><mn>1</mn><mo>−</mo
+                      ><mi>p</mi><mo>)</mo></mrow
+                    ></msqrt
+                  ></mfrac
+                ><mover><mo>→</mo><mi>d</mi></mover
+                ><mi mathvariant="normal">N</mi><mo>(</mo><mn>0</mn><mo>,</mo
+                ><mn>1</mn><mo>)</mo></mrow
+              ></math
+            >
+            <p>
+              This optional Bernoulli extension is explained here, not plotted
+              as if it were the Rademacher experiment. At p = 0 or 1 the
+              standardization is undefined because the variance is zero.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section class="section" id="sampling">
+        <div class="section-heading">
+          <span class="eyebrow">07 / THE EFFECT OF n AND m</span>
+          <h2>
+            Change the process.<br /><span class="soft"
+              >Or change how much you observe.</span
+            >
+          </h2>
+          <p>
+            Increasing n changes the score distribution of a single attacker.
+            Increasing m at fixed n leaves that law unchanged and gives us more
+            observations with which to estimate it.
+          </p>
+        </div>
+        <div class="panel sampling-panel">
+          <span class="eyebrow">FIX n · VARY THE NUMBER OF ATTACKERS</span>
+          <h3>More paths, a clearer empirical distribution.</h3>
+          <form id="sampling-form" class="toolbar">
+            <label
+              >Model<select id="sampling-model">
+                <option value="rademacher">Rademacher</option>
+                <option value="bernoulli">Bernoulli</option>
+              </select></label
+            ><label id="sampling-p-field" hidden
+              >Probability p<input
+                id="sampling-p"
+                type="number"
+                min="0"
+                max="1"
+                step="any"
+                value="0.5" /></label
+            ><label
+              >Fixed systems n<input
+                id="sampling-n"
+                type="number"
+                min="1"
+                max="20000"
+                value="100"
+                step="1" /></label
+            ><label
+              >Seed<input
+                id="sampling-seed"
+                type="number"
+                min="0"
+                max="4294967295"
+                value="20261031"
+                step="1" /></label
+            ><button type="submit" id="sampling-run" class="btn primary">
+              Generate 5,000 attackers →</button
+            ><button
+              type="button"
+              id="sampling-stop"
+              class="btn outline"
+              disabled
+            >
+              Stop
+            </button>
+          </form>
+          <progress
+            id="sampling-progress"
+            value="0"
+            max="100"
+            aria-label="Attacker-count experiment progress"
+          ></progress>
+          <p id="sampling-status" class="status" role="status">
+            Preparing the fixed-n experiment…
+          </p>
+          <div
+            class="checkpoint-tabs"
+            id="sampling-tabs"
+            aria-label="Choose number of attackers"
+          ></div>
+          <div class="two-grid">
+            <div>
+              <div class="chart-container">
+                <canvas
+                  id="sampling-hist-chart"
+                  role="img"
+                  aria-label="Normalized-score density histogram for selected m with the unchanged theoretical law"
+                ></canvas>
+              </div>
+            </div>
+            <div>
+              <div class="chart-container">
+                <canvas
+                  id="sampling-distance-chart"
+                  role="img"
+                  aria-label="Empirical probability mass distance from exact law as attacker count increases"
+                ></canvas>
+              </div>
+            </div>
+          </div>
+          <p id="sampling-note" class="chart-note"></p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>m</th>
+                  <th>Empirical mean of Sₙ/√n</th>
+                  <th>Empirical variance</th>
+                  <th>Mean Monte Carlo SE</th>
+                  <th>TV distance to exact PMF</th>
+                </tr>
+              </thead>
+              <tbody id="sampling-table"></tbody>
+            </table>
+          </div>
+          <p class="small-note">
+            The groups are nested: m = 50 uses the first 50 of the same 5,000
+            paths. All histograms use the same bin boundaries. Total variation
+            is computed on the full exact discrete support, not the display
+            bins. A single realization need not improve monotonically with m.
+          </p>
+        </div>
+        <div class="two-grid intro-grid">
+          <article class="panel">
+            <h3>Increasing n: a longer experiment</h3>
+            <p>
+              The expected total is nμ. Its variance is nσ², but averaging
+              reduces variance to σ²/n. Square-root normalization preserves σ²;
+              only the symmetric Rademacher case has mean zero without centring.
+              More systems do not automatically mean better real-world security:
+              n is a mathematical horizon here.
+            </p>
+          </article>
+          <article class="panel">
+            <h3>Increasing m: a larger ensemble</h3>
+            <p>
+              The distribution of one attacker’s Sₙ does not change. Its
+              empirical histogram becomes less noisy in a large independent
+              sample. The Monte Carlo standard error of the ensemble mean of
+              Sₙ/√n is σ/√m. This is uncertainty of an estimator, not the
+              standard deviation σ of one attacker’s normalized score.
+            </p>
+            <p>
+              We never add all attackers’ scores and label that sum as Sₙ. A
+              combined score would be a different random variable, with nm
+              increments under the model.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section class="section" id="conclusions">
+        <div class="section-heading">
+          <span class="eyebrow">08 / STATISTICAL CONCLUSIONS</span>
+          <h2>
+            Separate the theorem<br /><span class="soft"
+              >from the measured sample.</span
+            >
+          </h2>
+        </div>
+        <div class="conclusion">
+          <p>
+            <strong>Different increments produce different paths.</strong>
+            Bernoulli counts successes and has drift p with variance p(1 − p).
+            Symmetric Rademacher has no drift and unit increment variance. The
+            two models share the same rules for adding and scaling independent
+            increments.
+          </p>
+          <p>
+            <strong>The LLN concerns concentration.</strong> Sₙ/n approaches μ
+            in probability as n grows. The shrinking variance σ²/n and Chebyshev
+            bound explain why deviations become unlikely. The ensemble mean can
+            already be close to μ at a small n if m is large; that fact alone
+            does not establish the LLN. Inspect the spread across attackers and
+            the deviation probability.
+          </p>
+          <p id="conclusion-lln" class="measured-copy">
+            Measured LLN results are being calculated.
+          </p>
+          <p>
+            <strong>Three scales retain different amounts of variation.</strong>
+            The total-score variance grows as nσ², so absolute fluctuations have
+            scale √n. The average-score variance falls as σ²/n, while the
+            normalized-score variance stays σ². For Rademacher these are n, 1/n
+            and 1; for Bernoulli multiply each by p(1 − p). A constant
+            normalized variance does not imply a constant Bernoulli mean: that
+            mean is p√n.
+          </p>
+          <p>
+            <strong>The CLT concerns distributional shape.</strong> For
+            Rademacher, Sₙ/√n approaches N(0, 1), while remaining discrete for
+            every finite n. Its variance is already 1; convergence is seen in
+            the shape and CDF gap. A Bernoulli process needs centring and
+            division by √(np(1 − p)) for a standard normal limit.
+          </p>
+          <p id="conclusion-clt" class="measured-copy">
+            Measured CLT results are being calculated.
+          </p>
+          <p>
+            <strong>n and m answer different questions.</strong> n changes the
+            per-attacker law. m changes the precision of the empirical
+            distribution and moment estimates. Neither a smooth histogram nor
+            one mean near its target proves a theorem. More attackers cannot
+            repair biased sampling or a wrong increment model.
+          </p>
+          <p>
+            <strong>Limits remain explicit.</strong> These finite, seeded
+            pseudorandom experiments idealize independence, identical
+            probabilities, and static defences. Real attackers can adapt, share
+            information and target correlated systems. Sample means, variances
+            and tail frequencies fluctuate; the theory is exact under the
+            assumptions, whereas numerical estimates have Monte Carlo error. No
+            operational cyber-risk claim is made.
+          </p>
+        </div>
+        <details class="disclosure" open>
+          <summary>Short glossary</summary>
+          <dl class="glossary">
+            <div>
+              <dt>Expected value</dt>
+              <dd>
+                The probability-weighted mean of a random variable, denoted
+                E[X].
+              </dd>
+            </div>
+            <div>
+              <dt>Variance</dt>
+              <dd>
+                E[(X − E[X])²], the average squared distance from the mean.
+              </dd>
+            </div>
+            <div>
+              <dt>Law of large numbers (LLN)</dt>
+              <dd>
+                Averages of i.i.d. integrable increments concentrate around
+                their common expected value as the number of steps grows.
+              </dd>
+            </div>
+            <div>
+              <dt>Central limit theorem (CLT)</dt>
+              <dd>
+                For i.i.d. increments with positive finite variance, the
+                centred, standardized sum converges in distribution to N(0, 1).
+              </dd>
+            </div>
+            <div>
+              <dt>Convergence in probability</dt>
+              <dd>
+                For every fixed ε &gt; 0, the probability of being more than ε
+                away from a target tends to zero.
+              </dd>
+            </div>
+            <div>
+              <dt>Convergence in distribution</dt>
+              <dd>
+                The CDFs approach the target CDF at its continuity points;
+                individual values need not approach a constant.
+              </dd>
+            </div>
+          </dl>
+        </details>
+        <details class="disclosure">
+          <summary>
+            Reproducibility, numerical methods and primary sources
+          </summary>
+          <p>
+            The simulation uses Mulberry32 with an unsigned 32-bit seed.
+            Attackers are generated in attacker-major order, with exactly one
+            pseudorandom uniform per increment. This approximates the
+            mathematical i.i.d. model; a deterministic PRNG is not a proof of
+            independence or a cryptographic generator. Same settings, seed and
+            algorithm reproduce the same paths. Finite-n binomial masses are
+            calculated using a recurrence around the mode and normalization,
+            avoiding large factorials. Sample variance uses Welford’s algorithm.
+          </p>
+          <p>
+            Histograms group adjacent lattice cells and divide counts by m × bin
+            width. The standard-normal line is a density. Normal CDF values use
+            Abramowitz–Stegun approximation 26.2.17 (absolute error around 7.5 ×
+            10⁻⁸ or less). No formal goodness-of-fit p-values are presented.
+            Plotting retains at most eight paths and downsamples only their
+            display coordinates; moments and histograms use every simulated
+            attacker.
+          </p>
+          <ul class="sources">
+            <li>
+              <a
+                href="https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/mit18_05_s22_class06-prep-b.pdf"
+                >MIT OpenCourseWare 18.05 — LLN and CLT</a
+              >, Jeremy Orloff and Jonathan Bloom.
+            </li>
+            <li>
+              <a
+                href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda366i.htm"
+                >NIST/SEMATECH statistical handbook — Binomial distribution</a
+              >.
+            </li>
+            <li>
+              <a href="https://www.chartjs.org/docs/latest/"
+                >Chart.js documentation</a
+              >
+              — local bundled version 4.5.1, MIT license included.
+            </li>
+          </ul>
+        </details>
+        <div class="download-row">
+          <a href="README.md" class="text-link">Project README ↗</a
+          ><a href="results/TEST_REPORT.md" class="text-link"
+            >Executed test report ↗</a
+          ><a href="results/reference.json" class="text-link"
+            >Measured reference experiments ↗</a
+          >
+        </div>
+      </section>
+      <footer>
+        <span>STATISTICS · HOMEWORK 04 · SAPIENZA</span
+        ><span>Samuele De Santis · Educational stochastic model</span
+        ><a href="#top">Back to top ↑</a>
+      </footer>
+    </main>
+    <dialog id="help">
+      <button id="close-help" class="close" aria-label="Close explanation">
+        ×</button
+      ><span class="eyebrow">READ THE EXPERIMENT</span>
+      <h2 id="help-title"></h2>
+      <div id="help-body"></div>
+      <button id="done-help" class="btn primary">Got it</button>
+    </dialog>
+    <noscript
+      ><div class="callout">
+        JavaScript is required to run the simulations.
+      </div></noscript
+    >
+  </body>
+</html>

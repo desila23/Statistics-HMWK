@@ -1,0 +1,560 @@
+{
+  "generatedAt": "2026-10-28T17:51:19.016Z",
+  "runtime": "v24.22.1",
+  "description": "All results calculated by the shipped engine. No values are hard-coded into UI charts.",
+  "cases": [
+    {
+      "config": {
+        "model": "rademacher",
+        "n": 1000,
+        "m": 5000,
+        "p": 0.5,
+        "seed": 20261028
+      },
+      "incrementTheory": {
+        "mu": 0,
+        "sigma2": 1,
+        "total": {
+          "mean": 0,
+          "variance": 1
+        },
+        "average": {
+          "mean": 0,
+          "variance": 1
+        },
+        "normalized": {
+          "mean": 0,
+          "variance": 1
+        }
+      },
+      "lln": [
+        {
+          "n": 10,
+          "m": 5000,
+          "mean": -0.005479999999999997,
+          "variance": 0.1015342764552912,
+          "theoreticalMean": 0,
+          "theoreticalVariance": 0.1,
+          "exceed": 3809,
+          "probability": 0.7618,
+          "interval": [
+            0.7497944329138808,
+            0.7734035983476875
+          ],
+          "exactProbability": 0.75390625,
+          "chebyshev": 1
+        },
+        {
+          "n": 30,
+          "m": 5000,
+          "mean": 0.0014399999999999932,
+          "variance": 0.0329787443710964,
+          "theoreticalMean": 0,
+          "theoreticalVariance": 0.03333333333333333,
+          "exceed": 2943,
+          "probability": 0.5886,
+          "interval": [
+            0.5748973315129513,
+            0.6021666317023846
+          ],
+          "exactProbability": 0.584664711728692,
+          "chebyshev": 1
+        },
+        {
+          "n": 100,
+          "m": 5000,
+          "mean": 0.000676000000000003,
+          "variance": 0.00996401582716544,
+          "theoreticalMean": 0,
+          "theoreticalVariance": 0.01,
+          "exceed": 1343,
+          "probability": 0.2686,
+          "interval": [
+            0.2564955573684392,
+            0.2810597350917333
+          ],
+          "exactProbability": 0.2712530240738346,
+          "chebyshev": 0.9999999999999998
+        },
+        {
+          "n": 300,
+          "m": 5000,
+          "mean": -0.0006466666666666664,
+          "variance": 0.003284763219310523,
+          "theoreticalMean": 0,
+          "theoreticalVariance": 0.0033333333333333335,
+          "exceed": 352,
+          "probability": 0.0704,
+          "interval": [
+            0.0636340218927391,
+            0.077825587618454
+          ],
+          "exactProbability": 0.07331195259884675,
+          "chebyshev": 0.33333333333333326
+        },
+        {
+          "n": 1000,
+          "m": 5000,
+          "mean": -0.0008339999999999983,
+          "variance": 0.0009736151670334051,
+          "theoreticalMean": 0,
+          "theoreticalVariance": 0.001,
+          "exceed": 11,
+          "probability": 0.0022,
+          "interval": [
+            0.001228915407138813,
+            0.003935408649360061
+          ],
+          "exactProbability": 0.0013917415944220855,
+          "chebyshev": 0.09999999999999998
+        }
+      ],
+      "checkpoints": [
+        {
+          "n": 10,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": -0.054799999999999974,
+              "variance": 10.15342764552912,
+              "populationVariance": 10.151396960000014
+            },
+            "average": {
+              "count": 5000,
+              "mean": -0.005479999999999997,
+              "variance": 0.1015342764552912,
+              "populationVariance": 0.10151396960000014
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": -0.01732928157772271,
+              "variance": 1.015342764552912,
+              "populationVariance": 1.0151396960000014
+            }
+          },
+          "exactCDFGap": 0.123046875,
+          "empiricalCDFGap": 0.12140000000000972
+        },
+        {
+          "n": 30,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": 0.043199999999999794,
+              "variance": 29.68086993398676,
+              "populationVariance": 29.674933759999963
+            },
+            "average": {
+              "count": 5000,
+              "mean": 0.0014399999999999932,
+              "variance": 0.0329787443710964,
+              "populationVariance": 0.03297214862222218
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": 0.007887204828074354,
+              "variance": 0.989362331132892,
+              "populationVariance": 0.9891644586666655
+            }
+          },
+          "exactCDFGap": 0.07223222404718399,
+          "empiricalCDFGap": 0.08339999999999737
+        },
+        {
+          "n": 100,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": 0.0676000000000003,
+              "variance": 99.6401582716544,
+              "populationVariance": 99.62023024000007
+            },
+            "average": {
+              "count": 5000,
+              "mean": 0.000676000000000003,
+              "variance": 0.00996401582716544,
+              "populationVariance": 0.009962023024000007
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": 0.00676000000000003,
+              "variance": 0.996401582716544,
+              "populationVariance": 0.9962023024000007
+            }
+          },
+          "exactCDFGap": 0.03979461869358958,
+          "empiricalCDFGap": 0.04285968777441773
+        },
+        {
+          "n": 300,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": -0.19399999999999992,
+              "variance": 295.62868973794707,
+              "populationVariance": 295.56956399999945
+            },
+            "average": {
+              "count": 5000,
+              "mean": -0.0006466666666666664,
+              "variance": 0.003284763219310523,
+              "populationVariance": 0.0032841062666666607
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": -0.011200595222278734,
+              "variance": 0.9854289657931569,
+              "populationVariance": 0.9852318799999982
+            }
+          },
+          "exactCDFGap": 0.02301375720951737,
+          "empiricalCDFGap": 0.030919292423116307
+        },
+        {
+          "n": 1000,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": -0.8339999999999983,
+              "variance": 973.6151670334051,
+              "populationVariance": 973.4204439999985
+            },
+            "average": {
+              "count": 5000,
+              "mean": -0.0008339999999999983,
+              "variance": 0.0009736151670334051,
+              "populationVariance": 0.0009734204439999985
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": -0.02637339568580423,
+              "variance": 0.9736151670334051,
+              "populationVariance": 0.9734204439999985
+            }
+          },
+          "exactCDFGap": 0.012612509089180435,
+          "empiricalCDFGap": 0.02674216715048383
+        }
+      ]
+    },
+    {
+      "config": {
+        "model": "bernoulli",
+        "n": 1000,
+        "m": 5000,
+        "p": 0.5,
+        "seed": 20261028
+      },
+      "incrementTheory": {
+        "mu": 0.5,
+        "sigma2": 0.25,
+        "total": {
+          "mean": 0.5,
+          "variance": 0.25
+        },
+        "average": {
+          "mean": 0.5,
+          "variance": 0.25
+        },
+        "normalized": {
+          "mean": 0.5,
+          "variance": 0.25
+        }
+      },
+      "lln": [
+        {
+          "n": 10,
+          "m": 5000,
+          "mean": 0.49725999999999815,
+          "variance": 0.02538356911382275,
+          "theoreticalMean": 0.5,
+          "theoreticalVariance": 0.025,
+          "exceed": 1743,
+          "probability": 0.3486,
+          "interval": [
+            0.3355123760000846,
+            0.36192008414887883
+          ],
+          "exactProbability": 0.34375,
+          "chebyshev": 1
+        },
+        {
+          "n": 30,
+          "m": 5000,
+          "mean": 0.5007200000000014,
+          "variance": 0.008244686092774093,
+          "theoreticalMean": 0.5,
+          "theoreticalVariance": 0.008333333333333333,
+          "exceed": 994,
+          "probability": 0.1988,
+          "interval": [
+            0.1879708553189151,
+            0.21009160833278734
+          ],
+          "exactProbability": 0.20048842206597328,
+          "chebyshev": 0.8333333333333333
+        },
+        {
+          "n": 100,
+          "m": 5000,
+          "mean": 0.5003380000000007,
+          "variance": 0.0024910039567913613,
+          "theoreticalMean": 0.5,
+          "theoreticalVariance": 0.0025,
+          "exceed": 187,
+          "probability": 0.0374,
+          "interval": [
+            0.032485950592838445,
+            0.04302432724672842
+          ],
+          "exactProbability": 0.0352002002177048,
+          "chebyshev": 0.24999999999999994
+        },
+        {
+          "n": 300,
+          "m": 5000,
+          "mean": 0.49967666666666666,
+          "variance": 0.0008211908048276323,
+          "theoreticalMean": 0.5,
+          "theoreticalVariance": 0.0008333333333333334,
+          "exceed": 1,
+          "probability": 0.0002,
+          "interval": [
+            0.00003530578343936526,
+            0.0011320890808397363
+          ],
+          "exactProbability": 0.00041062141299336624,
+          "chebyshev": 0.08333333333333331
+        },
+        {
+          "n": 1000,
+          "m": 5000,
+          "mean": 0.4995829999999996,
+          "variance": 0.00024340379175835183,
+          "theoreticalMean": 0.5,
+          "theoreticalVariance": 0.00025,
+          "exceed": 0,
+          "probability": 0,
+          "interval": [
+            0,
+            0.0007677019450571244
+          ],
+          "exactProbability": 1.8016825412560711e-10,
+          "chebyshev": 0.024999999999999994
+        }
+      ],
+      "checkpoints": [
+        {
+          "n": 10,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": 4.972599999999981,
+              "variance": 2.5383569113822753,
+              "populationVariance": 2.537849239999999
+            },
+            "average": {
+              "count": 5000,
+              "mean": 0.49725999999999815,
+              "variance": 0.02538356911382275,
+              "populationVariance": 0.02537849239999999
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": 1.5724741892953222,
+              "variance": 0.2538356911382275,
+              "populationVariance": 0.2537849239999999
+            }
+          },
+          "exactCDFGap": 0.123046875,
+          "empiricalCDFGap": 0.12140000000000972
+        },
+        {
+          "n": 30,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": 15.02160000000004,
+              "variance": 7.420217483496684,
+              "populationVariance": 7.4187334399999845
+            },
+            "average": {
+              "count": 5000,
+              "mean": 0.5007200000000014,
+              "variance": 0.008244686092774093,
+              "populationVariance": 0.008243037155555539
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": 2.742556389939875,
+              "variance": 0.2473405827832228,
+              "populationVariance": 0.24729111466666615
+            }
+          },
+          "exactCDFGap": 0.07223222404718399,
+          "empiricalCDFGap": 0.08339999999999737
+        },
+        {
+          "n": 100,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": 50.03380000000008,
+              "variance": 24.910039567913614,
+              "populationVariance": 24.90505756000003
+            },
+            "average": {
+              "count": 5000,
+              "mean": 0.5003380000000007,
+              "variance": 0.0024910039567913613,
+              "populationVariance": 0.002490505756000003
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": 5.003380000000008,
+              "variance": 0.24910039567913614,
+              "populationVariance": 0.24905057560000032
+            }
+          },
+          "exactCDFGap": 0.03979461869358958,
+          "empiricalCDFGap": 0.04285968777441773
+        },
+        {
+          "n": 300,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": 149.903,
+              "variance": 73.90717243448691,
+              "populationVariance": 73.89239100000002
+            },
+            "average": {
+              "count": 5000,
+              "mean": 0.49967666666666666,
+              "variance": 0.0008211908048276323,
+              "populationVariance": 0.0008210265666666669
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": 8.654653740233245,
+              "variance": 0.2463572414482897,
+              "populationVariance": 0.24630797000000007
+            }
+          },
+          "exactCDFGap": 0.02301375720951737,
+          "empiricalCDFGap": 0.030919292423116307
+        },
+        {
+          "n": 1000,
+          "summary": {
+            "total": {
+              "count": 5000,
+              "mean": 499.58299999999963,
+              "variance": 243.40379175835184,
+              "populationVariance": 243.35511100000016
+            },
+            "average": {
+              "count": 5000,
+              "mean": 0.4995829999999996,
+              "variance": 0.00024340379175835183,
+              "populationVariance": 0.00024335511100000016
+            },
+            "normalized": {
+              "count": 5000,
+              "mean": 15.798201602998983,
+              "variance": 0.24340379175835183,
+              "populationVariance": 0.24335511100000015
+            }
+          },
+          "exactCDFGap": 0.012612509089180435,
+          "empiricalCDFGap": 0.02674216715048383
+        }
+      ]
+    }
+  ],
+  "clt": {
+    "config": {
+      "model": "rademacher",
+      "n": 1000,
+      "m": 5000,
+      "p": 0.5,
+      "seed": 20261030
+    },
+    "rows": [
+      {
+        "n": 10,
+        "mean": 0.030610847750429864,
+        "variance": 0.9835796919383899,
+        "exactCDFGap": 0.123046875,
+        "empiricalCDFGap": 0.14699999999999558
+      },
+      {
+        "n": 30,
+        "mean": 0.03257123475297393,
+        "variance": 0.9981254064146147,
+        "exactCDFGap": 0.07223222404718399,
+        "empiricalCDFGap": 0.09599999999999764
+      },
+      {
+        "n": 100,
+        "mean": 0.027200000000000002,
+        "variance": 0.984673094618921,
+        "exactCDFGap": 0.03979461869358958,
+        "empiricalCDFGap": 0.05794031222558371
+      },
+      {
+        "n": 1000,
+        "mean": -0.010334323393430246,
+        "variance": 0.9903848787357472,
+        "exactCDFGap": 0.012612509089180435,
+        "empiricalCDFGap": 0.019406783813970763
+      }
+    ]
+  },
+  "sampling": {
+    "config": {
+      "model": "rademacher",
+      "n": 100,
+      "m": 5000,
+      "p": 0.5,
+      "seed": 20261031
+    },
+    "rows": [
+      {
+        "m": 50,
+        "mean": 0.21200000000000002,
+        "variance": 0.8823020408163267,
+        "meanSE": 0.1414213562373095,
+        "totalVariation": 0.26447913036429643
+      },
+      {
+        "m": 100,
+        "mean": 0.11399999999999999,
+        "variance": 1.1630343434343433,
+        "meanSE": 0.1,
+        "totalVariation": 0.22229620805588035
+      },
+      {
+        "m": 500,
+        "mean": -0.0336,
+        "variance": 0.9683276953907816,
+        "meanSE": 0.044721359549995794,
+        "totalVariation": 0.09684259544061775
+      },
+      {
+        "m": 1000,
+        "mean": -0.017199999999999993,
+        "variance": 0.9840482082082076,
+        "meanSE": 0.03162277660168379,
+        "totalVariation": 0.07494834798742338
+      },
+      {
+        "m": 5000,
+        "mean": -0.010439999999999946,
+        "variance": 1.0046119287857567,
+        "meanSE": 0.01414213562373095,
+        "totalVariation": 0.02875925166355069
+      }
+    ]
+  }
+}

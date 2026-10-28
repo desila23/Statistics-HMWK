@@ -1,0 +1,43 @@
+{
+  "status": "PASS",
+  "assertions": 54,
+  "checks": [
+    {
+      "name": "bernoulli: browser worker equals Node fixture",
+      "status": "PASS"
+    },
+    {
+      "name": "rademacher: browser worker equals Node fixture",
+      "status": "PASS"
+    },
+    {
+      "name": "Bernoulli p=0: degenerate law",
+      "status": "PASS"
+    },
+    {
+      "name": "Bernoulli p=1: degenerate law",
+      "status": "PASS"
+    },
+    {
+      "name": "Minimum n=m=1: variance undefined and valid histogram",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid budget returns a worker error",
+      "status": "PASS"
+    },
+    {
+      "name": "CLT reference, progress and histogram density",
+      "status": "PASS"
+    },
+    {
+      "name": "LLN uses strict boundary and valid Chebyshev bound",
+      "status": "PASS"
+    },
+    {
+      "name": "Large worker can be terminated after progress",
+      "status": "PASS"
+    }
+  ],
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36"
+}

@@ -1,8 +1,8 @@
-# Statistics — Cryptography Homeworks
+# Statistics — Interactive Homeworks
 
 Interactive projects developed for the **Statistics course** of the Master's Degree in Cybersecurity at Sapienza University of Rome (2026/2027).
 
-The projects explore cryptographic algorithms through practical simulations, statistical analysis, and interactive visualizations.
+The projects explore cryptography and stochastic processes through practical simulations, statistical analysis, and interactive visualizations.
 
 ## Homeworks
 
@@ -20,6 +20,13 @@ Demonstrates the Ethereum wallet derivation pipeline, from BIP-39 mnemonic phras
 Encrypt/decrypt a shared message with real secp256k1 hybrid encryption and Caesar. Compare χ² and bigram attacks using reproducible, held-out experiments, then recover a deliberately restricted ECC private key.
 
 **[Open Homework 2 Repost](https://desila23.github.io/Statistics-HMWK/hw2-repost/)**
+
+### 04 — Stochastic Penetration Processes — LLN and CLT
+Simulate Bernoulli and symmetric Rademacher increments with reproducible seeds. Study the law of large numbers, exact and empirical deviation probabilities, three variance scalings, the Rademacher central limit theorem, and the separate effects of n systems and m attackers.
+
+**[Homework 4 source and instructions](hw4/README.md)** · [Executed validation report](hw4/results/TEST_REPORT.md)
+
+Static GitHub Pages entry point after publication: `hw4/`. Earlier homework directories are unchanged.
 
 ## Technologies
 HTML · CSS · JavaScript

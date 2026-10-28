@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><title>Homework 4 browser verification</title
+  ><style>
+    body {
+      font: 16px/1.6 system-ui;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f7f8fb;
+      color: #172431;
+    }
+    pre {
+      white-space: pre-wrap;
+    }
+    .pass {
+      color: #067c6e;
+    }
+    .fail {
+      color: #b12828;
+    }
+  </style>
+  <h1>Browser worker verification</h1>
+  <p>
+    These checks execute the production module worker in this browser. See the
+    Node suite for independent mathematical checks.
+  </p>
+  <pre id="output">Running…</pre>
+  <script type="module">
+    import { histogram, llnRows, cdfDistance } from "../js/core.js";
+    const output = document.querySelector("#output"),
+      checks = [];
+    let assertions = 0;
+    function check(condition, message) {
+      assertions++;
+      if (!condition) throw Error(message);
+    }
+    function near(a, b, t = 1e-12) {
+      check(Math.abs(a - b) <= t, `${a} differs from ${b}`);
+    }
+    function run(config, options = {}) {
+      return new Promise((resolve, reject) => {
+        const w = new Worker("../js/worker.js", { type: "module" }),
+          progress = [];
+        const timer = setTimeout(() => {
+          w.terminate();
+          reject(Error("Worker timed out"));
+        }, 30000);
+        w.onerror = (e) => {
+          clearTimeout(timer);
+          w.terminate();
+          reject(Error(e.message));
+        };
+        w.onmessage = ({ data }) => {
+          if (data.type === "progress") {
+            progress.push(data.completed);
+            return;
+          }
+          clearTimeout(timer);
+          w.terminate();
+          if (data.type === "error") {
+            resolve({ error: data.message, progress });
+            return;
+          }
+          resolve({ result: data.result, progress });
+        };
+        w.postMessage({ config, ...options });
+      });
+    }
+    async function test(name, fn) {
+      try {
+        await fn();
+        checks.push({ name, status: "PASS" });
+      } catch (e) {
+        checks.push({ name, status: "FAIL", message: e.message });
+      }
+      output.textContent = JSON.stringify(
+        { status: "RUNNING", assertions, checks },
+        null,
+        2,
+      );
+    }
+    try {
+      const fixtures = await fetch("../results/browser-fixture.json").then(
+        (r) => r.json(),
+      );
+      for (const model of ["bernoulli", "rademacher"])
+        await test(`${model}: browser worker equals Node fixture`, async () => {
+          const f = fixtures[model],
+            { result: r } = await run(f.config);
+          check(
+            JSON.stringify([...r.totals]) === JSON.stringify(f.totals),
+            "final totals",
+          );
+          check(
+            JSON.stringify([...r.paths[0].increments]) ===
+              JSON.stringify(f.firstPath),
+            "increment path",
+          );
+          for (const q of ["total", "average", "normalized"]) {
+            near(r.summary[q].mean, f.summary[q].mean);
+            near(r.summary[q].variance, f.summary[q].variance);
+            near(histogram(r.totals, r.config.n, model, 0.5, q).area, 1);
+          }
+        });
+      for (const p of [0, 1])
+        await test(`Bernoulli p=${p}: degenerate law`, async () => {
+          const { result: r } = await run({
+            model: "bernoulli",
+            n: 100,
+            m: 100,
+            p,
+            seed: 7,
+          });
+          check(
+            [...r.totals].every((v) => v === 100 * p),
+            "deterministic totals",
+          );
+          for (const q of ["total", "average", "normalized"])
+            near(r.summary[q].variance, 0);
+          near(histogram(r.totals, 100, "bernoulli", p).area, 1);
+        });
+      await test("Minimum n=m=1: variance undefined and valid histogram", async () => {
+        const { result: r } = await run({
+          model: "rademacher",
+          n: 1,
+          m: 1,
+          p: 0.5,
+          seed: 0,
+        });
+        check(r.summary.total.variance === null, "undefined variance");
+        near(histogram(r.totals, 1, "rademacher", 0.5).area, 1);
+      });
+      await test("Invalid budget returns a worker error", async () => {
+        const r = await run({
+          model: "rademacher",
+          n: 20000,
+          m: 20000,
+          seed: 1,
+        });
+        check(r.error.includes("100,000,000"), "budget validation");
+      });
+      await test("CLT reference, progress and histogram density", async () => {
+        const { result: r, progress } = await run(
+          { model: "rademacher", n: 1000, m: 5000, seed: 20261030 },
+          { keepPaths: 0 },
+        );
+        check(progress.length > 0, "progress reported");
+        check(
+          progress.every((v, i) => i === 0 || v > progress[i - 1]),
+          "monotone progress",
+        );
+        const expected = [
+          0.146999999999996, 0.0959999999999976, 0.0579403122256,
+          0.01940678381397,
+        ];
+        for (const [i, n] of [10, 30, 100, 1000].entries()) {
+          const s = r.snapshots.find((x) => x.n === n);
+          near(cdfDistance(s.totals, n), expected[i], 1e-11);
+          near(histogram(s.totals, n, "rademacher", 0.5).area, 1);
+        }
+        near(r.summary.normalized.mean, -0.0103343233934, 1e-12);
+        near(r.summary.normalized.variance, 0.990384878736, 1e-11);
+      });
+      await test("LLN uses strict boundary and valid Chebyshev bound", async () => {
+        const { result: r } = await run(
+          { model: "bernoulli", n: 1000, m: 5000, p: 0.5, seed: 20261028 },
+          { keepPaths: 0 },
+        );
+        const rows = llnRows(r, 0.1);
+        near(rows[0].exactProbability, 0.34375);
+        for (const row of rows)
+          check(row.exactProbability <= row.chebyshev + 1e-12, "Chebyshev");
+      });
+      await test("Large worker can be terminated after progress", async () => {
+        await new Promise((resolve, reject) => {
+          const w = new Worker("../js/worker.js", { type: "module" }),
+            timer = setTimeout(() => {
+              w.terminate();
+              reject(Error("No progress"));
+            }, 15000);
+          w.onmessage = ({ data }) => {
+            if (data.type === "progress") {
+              clearTimeout(timer);
+              check(data.completed < data.total, "partial progress");
+              w.terminate();
+              resolve();
+            } else {
+              clearTimeout(timer);
+              w.terminate();
+              reject(Error("No intermediate progress"));
+            }
+          };
+          w.postMessage({
+            config: { model: "rademacher", n: 20000, m: 5000, seed: 1 },
+            keepPaths: 0,
+          });
+        });
+      });
+    } catch (e) {
+      checks.push({
+        name: "Harness setup",
+        status: "FAIL",
+        message: e.message,
+      });
+    }
+    const report = {
+      status: checks.every((c) => c.status === "PASS") ? "PASS" : "FAIL",
+      assertions,
+      checks,
+      userAgent: navigator.userAgent,
+    };
+    output.textContent = JSON.stringify(report, null, 2);
+    output.className = report.status.toLowerCase();
+    document.title = `${report.status} — Homework 4 browser verification`;
+  </script>
+</html>

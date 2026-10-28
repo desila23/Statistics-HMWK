@@ -1,0 +1,14 @@
+{
+  "name": "statistics-homework-4",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run.mjs",
+    "reference": "node tests/reference.mjs"
+  },
+  "description": "Stochastic penetration processes: LLN, variance scaling and the CLT",
+  "engines": {
+    "node": ">=20"
+  }
+}

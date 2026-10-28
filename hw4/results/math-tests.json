@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "assertions": 28817,
+  "checks": [
+    "Parameter validation: integer ranges, seed bounds, invalid model/probabilities and 100-million-increment cap.",
+    "Bernoulli p=0 and p=1: all increments, final scores, zero variances, zero deviations and density areas.",
+    "Path integrity: allowed increment support, cumulative sums, endpoints, Rademacher parity, exact seeded repeatability and nested-m prefixes.",
+    "PRNG determinism and [0,1) support; Welford moments and m=1 undefined sample variance.",
+    "Finite-n exact law: PMF recurrence checked independently against binomial coefficients; normalization, mean and variance; stable n=20,000 rare-event cases.",
+    "All mean/variance scaling identities and data-derived histogram areas/counts/densities at every checkpoint.",
+    "Strict epsilon boundary, independently known exact tail probabilities, Chebyshev bounds, Wilson boundary uncertainty.",
+    "Normal PDF/CDF reference values, both sides of discrete CDF jumps, decreasing endpoint exact-normal gap.",
+    "Statistical tests (fixed seed): empirical means within 6 Monte Carlo SE, sample variances within 8 exact variance-estimator SE; tail frequencies within predeclared uncertainty tolerances.",
+    "CSV contains parameters, seed and every attacker; nested-m fixed-bin histograms; correct Monte Carlo SE; generator emits chunk progress."
+  ],
+  "statisticalChecks": [
+    {
+      "model": "bernoulli",
+      "normalizedMean": 15.798201602998983,
+      "theoreticalMean": 15.811388300841896,
+      "normalizedVariance": 0.24340379175835183,
+      "theoreticalVariance": 0.25,
+      "meanSE": 0.007071067811865475,
+      "varianceSE": 0.004997999699899955
+    },
+    {
+      "model": "rademacher",
+      "normalizedMean": -0.02637339568580423,
+      "theoreticalMean": 0,
+      "normalizedVariance": 0.9736151670334051,
+      "theoreticalVariance": 1,
+      "meanSE": 0.01414213562373095,
+      "varianceSE": 0.01999199879959982
+    }
+  ],
+  "elapsedMs": 435.885426,
+  "runtime": "v24.22.1",
+  "generatedAt": "2026-10-28T17:51:18.405Z"
+}
