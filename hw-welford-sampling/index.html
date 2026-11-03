@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Derive Welford’s algorithm and explore the sampling distributions of means and variances.">
+<title>Welford’s Algorithm — Sampling Mean and Variance</title>
+<link rel="stylesheet" href="style.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('statsTheme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch{}</script>
+<script defer src="vendor/chart.umd.min.js"></script>
+<script type="module" src="app.mjs"></script>
+</head>
+<body>
+<header><div class="wrap nav"><a href="../">Statistics Lab</a><nav aria-label="Sections"><a href="#welford">Welford</a><a href="#distribution">Model</a><a href="#lab">Simulation</a><a href="#size">Sample size</a><a href="#inference">Inference</a></nav><button id="theme" aria-label="Toggle dark theme" aria-pressed="false">◐ Theme</button></div></header>
+<main class="wrap">
+<section class="hero">
+<div><div class="eyebrow">Statistics · Two exercises</div><h1>Welford’s Algorithm <span>&amp; Sampling</span></h1><p><strong>Online Statistics, Unbiased Estimation and Sampling Experiments</strong></p><p>Update a mean and variance one observation at a time. Then simulate repeated samples to see how those estimates vary.</p><a class="cta" href="#welford">Derive the update ↓</a></div>
+<div class="panel"><div class="eyebrow">The experiment</div><h2>One score per system.</h2><p>Each of <i>m</i> hackers attempts <i>n</i> systems. The resulting integer score measures an abstract outcome from 0 to 10. This is a statistical model, not a realistic model of cyberattacks.</p><p>The mean measures level; the variance measures spread. The distribution has fixed parameters, while estimates change with the observed sample. An online algorithm updates a running state as observations arrive, without retaining every score.</p><h3>Learning objectives</h3><ul><li>Derive and implement the mean and sum of squares updates.</li><li>Compare sample estimates with known parameters.</li><li>Separate the effects of sample size and simulation size.</li></ul></div>
+</section>
+
+<section id="welford" class="stack">
+<div><div class="eyebrow">Exercise 1</div><h2>From the definition to three lines</h2></div>
+<div class="grid">
+<article class="panel"><h3>1. Knuth’s mean recurrence</h3>
+<p>Start with the average of the first <i>n</i> observations. Split off the newest observation. The sum of the earlier values is their mean multiplied by their count.</p>
+<div class="formula">mₙ = (Σᵢ₌₁ⁿ xᵢ)/n<br>= [(n−1)mₙ₋₁ + xₙ]/n<br>= mₙ₋₁ + (xₙ − mₙ₋₁)/n</div>
+<p>The last line follows by writing (n−1)mₙ₋₁ as nmₙ₋₁ − mₙ₋₁. Set δ = xₙ − mₙ₋₁ and h = δ/n. The updated mean is mₙ₋₁ + h.</p>
+</article>
+<article class="panel"><h3>2. Welford’s sum of squares recurrence</h3>
+<div class="formula">SSₙ = Σᵢ₌₁ⁿ (xᵢ − mₙ)²</div>
+<p>Let dᵢ = xᵢ − mₙ₋₁ for i &lt; n. Under the new mean, each old deviation becomes dᵢ − h. Expanding its square and summing gives:</p>
+<div class="formula">Σᵢ₌₁ⁿ⁻¹ (dᵢ − h)²<br>= SSₙ₋₁ − 2h Σᵢ₌₁ⁿ⁻¹ dᵢ + (n−1)h²<br>= SSₙ₋₁ + (n−1)h².</div>
+<p>The cross term vanishes because the deviations from the old mean sum to zero. The newest deviation is δ − h. Add its square and substitute h = δ/n:</p>
+<div class="formula">SSₙ = SSₙ₋₁ + (n−1)h² + (δ−h)²<br>= SSₙ₋₁ + δ² − 2δh + nh²<br>= SSₙ₋₁ + ((n−1)/n)δ²<br>= SSₙ₋₁ + δ(xₙ − mₙ).</div>
+<p>These recurrences apply for n ≥ 2; the first observation sets m₁ = x₁ and SS₁ = 0.</p></article>
+</div>
+<article class="panel"><h3>3. The sample variance</h3>
+<p>SSₙ/n is the population variance of the observed values treated as the whole population. For an i.i.d. sample estimating a parent population’s variance, use s²ₙ = SSₙ/(n−1), n ≥ 2. It is undefined at n = 1.</p>
+<div class="formula">s²ₙ = [SSₙ₋₁ + ((n−1)/n)δ²]/(n−1)<br>
+<math aria-label="Equals n minus two over n minus one, times the previous sample variance, plus delta squared over n">
+<mo>=</mo><mfrac><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></mfrac><msubsup><mi>s</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow><mn>2</mn></msubsup><mo>+</mo><mfrac><msup><mi>δ</mi><mn>2</mn></msup><mi>n</mi></mfrac>
+</math>, n ≥ 3.</div>
+<p>For n = 2, obtain the variance directly from SS₂; s²₁ does not exist.</p></article>
+<article class="panel"><h3>The three-line update</h3><p>Start with count = 0, mean = 0 and M2 = 0. Increment count before these lines. The new mean uses the old deviation, and M2 stores the updated SS.</p>
+<pre><code>const delta = x - mean;
+mean += delta / count;
+M2 += delta * (x - mean);</code></pre>
+<details><summary>Complete JavaScript function</summary><pre><code>function onlineStats(values) {
+  let count = 0, mean = 0, M2 = 0;
+  for (const x of values) {
+    count++;
+    const delta = x - mean;
+    mean += delta / count;
+    M2 += delta * (x - mean);
+  }
+  return {
+    count, mean: count ? mean : null, M2,
+    sampleVariance: count &gt; 1 ? M2 / (count - 1) : null
+  };
+}</code></pre></details></article>
+<article class="panel stack"><h3>Step through the same data</h3><label for="sequence">Observations (comma or whitespace separated)</label><textarea id="sequence" rows="2">2, 4, 6</textarea>
+<div class="controls"><button id="step" class="primary">Next observation</button><button id="all">Run all</button><button id="clear">Reset steps</button><button id="large">Load large-offset example</button></div>
+<p id="stepStatus" class="status" role="status"></p>
+<div class="table"><table aria-label="Welford updates"><thead><tr><th>Observation</th><th>Count</th><th>Delta</th><th>Updated mean</th><th>Updated M2</th><th>Sample variance</th></tr></thead><tbody id="steps"></tbody></table></div>
+<div class="chart"><canvas id="stepChart" role="img" aria-label="Running mean and sample variance"></canvas></div>
+<p id="comparison"></p><p>The comparison uses the processed prefix: first calculate its mean, then sum squared deviations. Small rounding differences are normal. Welford uses constant state and avoids the subtraction of nearly equal large quantities in the naive sum-of-squares shortcut. It is not more accurate than exact arithmetic.</p></article>
+</section>
+
+<section id="distribution" class="stack">
+<div><div class="eyebrow">Exercise 2 · Probability model</div><h2>Eleven scores, equal probability</h2></div>
+<div class="grid"><article class="panel"><p>For each attempt, draw independently from the discrete uniform distribution on {0, 1, …, 10}. Each score has probability 1/11. This fixed distribution is easy to simulate and has exact reference values.</p>
+<div class="formula">μ = (0 + 1 + ··· + 10)/11 = 55/11 = 5<br>E[X²] = (0² + 1² + ··· + 10²)/11 = 385/11 = 35<br>σ² = 35 − 5² = 10; &nbsp; σ = √10</div></article>
+<div class="panel"><h3>Probability mass function</h3><div class="chart compact"><canvas id="pmf" role="img" aria-label="Eleven equally probable scores"></canvas></div></div></div>
+</section>
+
+<section id="lab" class="stack">
+<div><div class="eyebrow">Exercise 2 · Simulation</div><h2>Sampling lab</h2><p>One sample per hacker, one score per system. Each hacker’s mean and variance are calculated online with Welford.</p></div>
+<article class="panel"><form id="labForm" class="controls">
+<label>Systems per hacker (n)<input id="n" type="number" min="2" max="10000" value="30" list="nOptions" required></label>
+<label>Hackers (m)<input id="m" type="number" min="2" max="10000" value="1000" list="mOptions" required></label>
+<label>Random seed<input id="seed" type="number" min="0" max="4294967295" value="20261103" required></label>
+<button class="primary">Run Simulation</button><button id="reset" type="button">Reset</button><button id="newSeed" type="button">New Seed</button><button id="exportLab" type="button" disabled>Export CSV</button>
+</form>
+<datalist id="nOptions"><option>2</option><option>5</option><option>10</option><option>30</option><option>100</option><option>500</option><option>1000</option></datalist>
+<datalist id="mOptions"><option>10</option><option>50</option><option>100</option><option>500</option><option>1000</option><option>5000</option></datalist>
+<p id="labStatus" class="status" role="status"></p>
+<div id="labMetrics" class="metrics"></div><p id="labDetails"></p><small>Maximum 10 million scores per run. The seed reproduces results when the run parameters are unchanged.</small></article>
+<div class="grid">
+<article class="panel"><h3>Sample mean distribution</h3><p>Each observation in this histogram is a hacker’s final mean. As n grows, the distribution concentrates around μ.</p><div class="chart"><canvas id="meanHist" role="img" aria-label="Histogram of sample means"></canvas></div></article>
+<article class="panel"><h3>Sample variance distribution</h3><p>The n−1 divisor makes s² unbiased. Individual values can vary widely and their distribution need not be normal.</p><div class="chart"><canvas id="varHist" role="img" aria-label="Histogram of sample variances"></canvas></div></article>
+<article class="panel"><h3>Running mean</h3><p>Up to four hackers; long paths are thinned for display.</p><div class="chart"><canvas id="runningMean" role="img" aria-label="Hacker running means"></canvas></div></article>
+<article class="panel"><h3>Running sample variance</h3><p>Step 1 has no sample variance; the chart starts drawing estimates at step 2.</p><div class="chart"><canvas id="runningVar" role="img" aria-label="Hacker running sample variances"></canvas></div></article>
+<article class="panel"><h3>Mean versus variance</h3><p>One point per hacker. This exploratory view does not establish independence or a correlation claim.</p><div class="chart"><canvas id="scatter" role="img" aria-label="Scatter plot of final means and variances"></canvas></div></article>
+</div>
+</section>
+
+<section id="size" class="stack">
+<div><div class="eyebrow">Exercise 2 · Repeated experiment</div><h2>Effect of sample size on estimation</h2><p>Hold m fixed. Use the same hacker’s score prefixes at each n, so estimates for different n are paired; the m samples are independent within each n under the simulation model.</p></div>
+<article class="panel">
+<form id="sweepForm" class="controls"><label>Hackers per size (m)<input type="number" id="sweepM" min="2" max="10000" value="2000" required></label><label>Random seed<input type="number" id="sweepSeed" min="0" max="4294967295" value="20261104" required></label><button class="primary">Run Size Comparison</button><button type="button" id="exportSweep" disabled>Export Summary CSV</button></form>
+<p id="sweepStatus" class="status" role="status"></p>
+<div class="table"><table aria-label="Sample size experiment results"><thead><tr><th>n</th><th>Average mean</th><th>Average s²</th><th>Var(mean)</th><th>Var(s²)</th><th>|Avg mean − 5|</th><th>|Avg s² − 10|</th></tr></thead><tbody id="sweepRows"></tbody></table></div>
+</article>
+<div class="grid">
+<article class="panel"><h3>Average sample mean vs n</h3><p>Unbiased for every n; empirical deviations can oscillate.</p><div class="chart"><canvas id="avgMeanN" role="img" aria-label="Average sample means by sample size"></canvas></div></article>
+<article class="panel"><h3>Average sample variance vs n</h3><p>Bessel’s correction accounts for estimating the sample mean.</p><div class="chart"><canvas id="avgVarN" role="img" aria-label="Average sample variances by sample size"></canvas></div></article>
+<article class="panel"><h3>Variability of sample means</h3><p>Var(mean) = 10/n, so SD(mean) = √(10/n).</p><div class="chart"><canvas id="spreadMeanN" role="img" aria-label="Variance of means by sample size"></canvas></div></article>
+<article class="panel"><h3>Variability of sample variances</h3><p>μ₄ = 2(1⁴ + 2⁴ + 3⁴ + 4⁴ + 5⁴)/11 = 178. For n ≥ 2, Var(s²) = [178 − 100(n−3)/(n−1)]/n = 78/n + 200/[n(n−1)]. Both terms decrease as n increases.</p><div class="chart"><canvas id="spreadVarN" role="img" aria-label="Variance of sample variances by sample size"></canvas></div></article>
+</div>
+<h3>Small vs large samples · n = 5 and n = 100</h3><p>Each pair uses identical bin boundaries and axes. Bars show the percentage of hackers in each bin.</p>
+<div class="grid">
+<article class="panel"><h3>Sample means · n = 5</h3><div class="chart"><canvas id="smallMean" role="img" aria-label="Sample mean distribution at n 5"></canvas></div></article>
+<article class="panel"><h3>Sample means · n = 100</h3><div class="chart"><canvas id="largeMean" role="img" aria-label="Sample mean distribution at n 100"></canvas></div></article>
+<article class="panel"><h3>Sample variances · n = 5</h3><div class="chart"><canvas id="smallVar" role="img" aria-label="Sample variance distribution at n 5"></canvas></div></article>
+<article class="panel"><h3>Sample variances · n = 100</h3><div class="chart"><canvas id="largeVar" role="img" aria-label="Sample variance distribution at n 100"></canvas></div></article>
+</div>
+<p id="observed"></p>
+</section>
+
+<section id="inference" class="panel stack">
+<div class="eyebrow">Interpretation</div><h2>Why does this matter for inferential statistics?</h2>
+<p><strong>Bias</strong> is the difference between an estimator’s expectation and its target. E[mean] = μ by linearity. Also, SS = Σ(Xᵢ−μ)² − n(mean−μ)². Under i.i.d. sampling with finite variance, its expectation is nσ² − σ² = (n−1)σ². Thus E[s²] = σ² with the n−1 divisor; dividing by n instead gives (n−1)σ²/n in expectation.</p>
+<p><strong>Sampling variability</strong> is how estimates change across repeated samples. <strong>Estimator variance</strong> measures that spread. Neither a single sample’s s² nor the average of the s² values measures the spread of sample means. The lab estimates the spread across hackers with the m−1 divisor.</p>
+<p><strong>Consistency</strong> means convergence in probability as n grows. The law of large numbers applies to both the sample average of X and the sample average of X² for our bounded scores. Since s² = n/(n−1) × (average of X² − mean²), it also converges in probability to σ².</p>
+<p><strong>Estimation accuracy</strong> concerns closeness to the target. Mean squared error combines squared bias and estimator variance. Larger n generally gives more informative estimates here, without guaranteeing that a particular sample is closer.</p>
+<p><strong>Monte Carlo error</strong> comes from using only m simulated samples to estimate sampling properties. For example, the standard error of the average sample mean is √(10/(nm)); for the average sample variance it is √(Var(s²)/m). Increasing m reduces this error and does not change an individual hacker’s estimator distribution at fixed n.</p>
+<p>When population parameters are unknown, these distinctions help choose estimators, quantify uncertainty and decide how much data to collect.</p>
+</section>
+<section class="panel stack" id="conclusions">
+<div class="eyebrow">Takeaways</div><h2>Conclusions</h2>
+<p>Welford updates mean and SS without keeping the observations. The sample mean and the sample variance with denominator n−1 are unbiased for μ = 5 and σ² = 10. Compare the simulated average of each estimator with its own target.</p>
+<p>Theory predicts smaller variability for both estimators as n increases. The charts measure that behavior using finite simulations: random departures from theory, including local reversals, are possible. Increasing m improves Monte Carlo precision. This helps explain why an estimate can be unbiased and still uncertain, and why collecting more observations can improve inference.</p>
+<details><summary>Reproduce an experiment</summary><p>Record n, m and the unsigned 32-bit seed. The module worker uses Mulberry32 and rejects the four largest 32-bit output values before taking the remainder modulo 11, avoiding uneven mapping of uniform integers. The sweep generates 1,000 scores per hacker and records the selected prefixes. A standalone run at a smaller n consumes the stream differently. This generator is for simulation, not security.</p></details>
+</section>
+</main>
+<footer><div class="wrap"><a href="../">← Homework collection</a> · Educational simulation</div></footer>
+<noscript>Enable JavaScript to run the experiments.</noscript>
+</body></html>
