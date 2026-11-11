@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Compare domain and range integration, then compute the normal CDF with numerical quadrature, a series and the incomplete gamma function.">
+<title>Numerical Integration &amp; the Normal CDF — Statistics Lab</title>
+<link rel="stylesheet" href="style.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('statsTheme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch{}</script>
+<script defer src="vendor/chart.umd.min.js"></script>
+<script type="module" src="app.mjs"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="wrap nav"><a href="../">Statistics Lab</a><nav aria-label="Sections"><a href="#integration">Integration</a><a href="#normal">Normal CDF</a><a href="#liouville">Liouville</a><a href="#sources">References</a></nav><button type="button" id="theme" aria-label="Toggle dark theme" aria-pressed="false">◐ Theme</button></div></header>
+<main class="wrap" id="main">
+<section class="hero">
+<div><div class="eyebrow">Statistics · Numerical methods</div><h1>Numerical integration <span>&amp; the normal CDF</span></h1><p>Slice an integral along the x-axis or the y-axis. Then use the same idea to compute a probability that has no elementary antiderivative.</p><div class="jump"><a class="cta" href="#integration">Compare integration methods ↓</a><a href="#normal">Compute a probability ↗</a></div></div>
+<aside class="panel hero-panel"><span class="chip">Two exercises · One lab</span><h2>Which axis do you partition?</h2>
+<svg viewBox="0 0 320 125" role="img" aria-label="Vertical midpoint rectangles beside horizontal superlevel strips">
+<path d="M8 104H147M168 104H310" fill="none" stroke="var(--line)" stroke-width="2"/>
+<g fill="var(--accent)" fill-opacity=".27" stroke="var(--accent)"><path d="M12 104V81H36V104Z M36 104V53H60V104Z M60 104V39H84V104Z M84 104V51H108V104Z M108 104V77H132V104Z"/></g>
+<path d="M12 98Q70 -20 132 98M175 98Q233 -20 295 98" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+<g fill="var(--blue)" fill-opacity=".27" stroke="var(--blue)"><path d="M180 86H290V104H180Z M190 68H280V86H190Z M201 50H269V68H201Z M221 32H249V50H221Z"/></g>
+<g fill="var(--muted)" font-family="system-ui" font-size="11"><text x="22" y="122">Domain intervals</text><text x="184" y="122">Range levels</text></g>
+</svg><p>Both pictures measure area. The information needed to build them is different.</p></aside>
+</section>
+
+<section id="integration" class="stack">
+<div class="section-head"><div class="eyebrow">Exercise 1</div><h2>Riemann and Lebesgue integration</h2><p>Compare the same function using two partition sizes, absolute error, observed convergence and measured cost.</p></div>
+<div class="grid">
+<article class="panel"><h3>Partition the domain</h3><p>Divide [a,b] into n equal intervals of width Δx. Evaluate at their midpoints. For a bounded Riemann-integrable function, tagged sums converge to the same integral as the mesh shrinks.</p><div class="formula">Iₙ = Δx ∑ f(a + (i + ½)Δx), &nbsp; i = 0,…,n−1.</div></article>
+<article class="panel"><h3>Partition the range</h3><p>For nonnegative f, let S(y) = m({x : f(x) &gt; y}), the length of the measurable superlevel set. The difference S(u) − S(v) measures the preimage of the range bin (u,v]. Integrating S over heights counts the same area by horizontal slices.</p><div class="formula"><math aria-label="Integral over the domain of f equals integral from zero to infinity of S of y"><msub><mo>∫</mo><mi>D</mi></msub><mi>f</mi><mo> </mo><mi>d</mi><mi>x</mi><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mi>∞</mi></msubsup><mi>S</mi><mo>(</mo><mi>y</mi><mo>)</mo><mi>d</mi><mi>y</mi></math></div><p>Apply midpoint quadrature to S on [0,T]. Because S decreases, right and left endpoints bound the clipped integral from below and above, up to floating-point error.</p></article>
+</div>
+<article class="panel stack">
+<form id="intForm" class="controls">
+<label class="wide">Function<select id="fn"></select></label>
+<label>Domain intervals n<input id="n" type="number" min="1" max="32768" value="32" required></label>
+<label>Range bins k<input id="k" type="number" min="1" max="32768" value="32" required></label>
+<label id="capField" hidden>Height cap T<input id="cap" type="number" min="1" max="256" value="16" required></label>
+<button class="primary">Compare methods</button>
+</form>
+<p id="intStatus" role="status"></p><div class="metrics" id="intMetrics"></div>
+<p id="intDetails"></p><p id="intNote"></p>
+<div class="controls"><button type="button" id="intBench">Measure runtime</button><button type="button" id="intCsv">Export convergence CSV</button></div>
+<p id="intTiming" class="status" role="status"></p>
+</article>
+<div class="grid">
+<article class="panel"><h3>Domain samples</h3><div class="chart tall"><canvas id="domainPlot" role="img" aria-label="Function and domain midpoint samples"></canvas></div><p class="legend-note" id="domainCaption"></p></article>
+<article class="panel"><h3>Superlevel lengths</h3><div class="chart tall"><canvas id="rangePlot" role="img" aria-label="Superlevel lengths and range midpoint samples"></canvas></div><p class="legend-note">Each sampled height contributes its superlevel length times the bin width.</p></article>
+<article class="panel"><h3>Convergence of absolute error</h3><div class="chart tall"><canvas id="convergence" role="img" aria-label="Absolute integral error against partition count"></canvas></div><p class="legend-note">Both axes are logarithmic. Errors ≤ 10⁻¹⁶ share a display floor. The range curve keeps T fixed for the singular example.</p></article>
+<article class="panel"><h3>Convergence data</h3><div class="table"><table><thead><tr><th>n = k</th><th>Domain estimate</th><th>Range estimate</th><th>Domain error</th><th>Range error</th></tr></thead><tbody id="intRows"></tbody></table></div></article>
+</div>
+<article class="panel"><h3>What changes between the methods?</h3><p>Smooth functions often favor midpoint sums in the domain. Range quadrature can converge more slowly when S has an endpoint cusp, as for x². An aligned grid can integrate a step exactly; a misaligned grid can change the result in either direction. More subdivisions need not improve every individual estimate.</p><p>For a bounded Riemann-integrable function, the two integrals agree. For 1/√x the improper domain integral agrees with Lebesgue integration, but refining height bins alone cannot remove a fixed clipping error. For Dirichlet, rational-only sampling is misleading; range bins use exact measures rather than counting rational grid points. Thomae’s function is Riemann-integrable despite its dense discontinuities.</p><p>Computationally, domain sums use n function evaluations. This range implementation uses 2k+1 superlevel queries to compute both bounds and a midpoint estimate. Each query is cheap when a closed formula is available. For sinc it can require 48 function evaluations. A generic range algorithm would need to estimate preimage measures, potentially adding another layer of numerical error.</p></article>
+</section>
+
+<section id="normal" class="stack">
+<div class="section-head"><div class="eyebrow">Exercise 2</div><h2>Compute the standard normal CDF</h2><p>Compare four numerical methods at a point or across a reference grid. Report both Φ(z) and the smaller one-sided tail q = Φ(−|z|), so rounding a probability to 1 does not hide a small tail.</p></div>
+<div class="grid">
+<article class="panel"><h3>Exact representation</h3><div class="formula"><math aria-label="Phi of z is one half times one plus erf of z over square root of two"><mi>Φ</mi><mo>(</mo><mi>z</mi><mo>)</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>[</mo><mn>1</mn><mo>+</mo><mi>erf</mi><mo>(</mo><mfrac><mi>z</mi><msqrt><mn>2</mn></msqrt></mfrac><mo>)</mo><mo>]</mo></math></div><p>Substitute t = u/√2 in the normal density integral. The error function erf(x) is 2/√π times the integral of e⁻ᵗ² from 0 to x. This is an exact identity. A practical evaluator still needs a numerical approximation of erf or erfc.</p></article>
+<article class="panel"><h3>Efficient method: series and continued fraction</h3><p>Let x = z²/2. Then q = Q(½,x)/2, where Q is the regularized upper incomplete gamma ratio. For x &lt; 1.5, use a positive-term lower-gamma series, then take its complement. Otherwise evaluate the upper-gamma continued fraction directly with modified Lentz iteration.</p><p>The direct tail avoids subtracting nearly equal numbers at large |z|. Terms or fraction updates stop near binary64 precision. Near |z| ≈ √3 the fraction needs more iterations; deeper in the tail it converges faster.</p></article>
+<article class="panel"><h3>Quadrature baseline</h3><p>Integrate the density φ(t) = e⁻ᵗ²⁄²/√(2π) over [0,|z|]. Composite trapezoid and Simpson use fixed steps. For fixed z and smooth φ, their usual error orders are O(h²) and O(h⁴), respectively; particular endpoints can cancel leading terms. Both compute q by subtracting the central area from ½, which loses relative accuracy for small tails.</p></article>
+<article class="panel"><h3>Direct erf power series</h3><div class="formula">erf(x) = (2/√π) ∑ₖ₌₀∞ (−1)ᵏ x²ᵏ⁺¹ / [k!(2k+1)].</div><p>Integrate the exponential power series term by term. The series converges for every real x, but large alternating terms cancel in finite precision. This demo restricts |z| to 6 for the direct series; the limit is numerical, not mathematical.</p></article>
+</div>
+<article class="panel stack">
+<form id="cdfForm" class="controls">
+<label>Point z<input id="z" type="number" min="-40" max="40" step="any" value="-8" required></label>
+<label>Quadrature panels<input id="panels" type="number" min="2" max="16384" value="128" required></label>
+<button class="primary">Evaluate Φ(z)</button>
+</form>
+<p id="cdfStatus" role="status"></p>
+<div class="table"><table><caption>Methods at the selected z</caption><thead><tr><th>Method</th><th>Φ(z)</th><th>Smaller tail q</th><th>Work</th></tr></thead><tbody id="cdfPoint"></tbody></table></div>
+<p id="cdfReference"></p>
+<p class="legend-note">Work is counted as PDF evaluations for quadrature, terms for the direct series, and terms or iterations for the gamma method. Simpson rounds an odd panel count up to an even one. Negative approximate tails are shown as numerical failures, never clipped to zero.</p>
+<div class="controls"><button type="button" id="cdfBench">Measure runtime</button><button type="button" id="cdfCsv">Export reference comparison CSV</button></div>
+<p id="cdfTiming" role="status"></p>
+</article>
+<div class="grid">
+<article class="panel"><h3>Probability as area</h3><div class="chart tall"><canvas id="density" role="img" aria-label="Normal density shaded to the selected z"></canvas></div><p id="densityNote" class="legend-note"></p></article>
+<article class="panel"><h3>Quadrature convergence</h3><div class="chart tall"><canvas id="cdfConvergence" role="img" aria-label="Trapezoid and Simpson absolute error versus number of panels"></canvas></div><p id="convergenceNote" class="legend-note"></p></article>
+</div>
+<article class="panel stack">
+<h3>Accuracy against high-precision values</h3>
+<p id="gridSummary"></p>
+<div class="table"><table><thead><tr><th>z</th><th>Reference Φ(z)</th><th>Reference q</th><th>Gamma |ΔΦ|</th><th>Gamma relative q error</th><th>Simpson |ΔΦ|</th><th>Trapezoid |ΔΦ|</th><th>Series |ΔΦ|</th></tr></thead><tbody id="referenceRows"></tbody></table></div>
+<h3>External check: published ETSU values</h3>
+<p>Example 3.4.2 of the linked lecture notes uses these four-decimal values. They validate the displayed digits, not full precision. The separate high-precision reference grid is generated with mpmath at 75 digits and then rounded to binary64.</p>
+<div class="table"><table><thead><tr><th>z</th><th>ETSU Φ(z)</th><th>Computed Φ(z)</th><th>Matches to 4 decimals?</th></tr></thead><tbody id="etsuRows"></tbody></table></div>
+</article>
+</section>
+
+<section class="panel stack" id="liouville">
+<div class="eyebrow">Why a special function?</div><h2>Liouville’s theorem and the Gaussian</h2>
+<p>Liouville’s theorem on elementary antiderivatives says that if an elementary primitive exists, its derivative can be written as a derivative in an algebraic extension plus a finite sum of constant multiples of logarithmic derivatives. Taking trace and norm descends this representation to the base field.</p>
+<p>Here take the base field ℂ(x,t), with t = e⁻ˣ²⁄² and t′ = −xt. Expand the rational terms in t at t = ∞. Logarithmic derivatives have no positive powers of t there: their leading factor is a(x)tᵈ, whose logarithmic derivative is a′/a − dx. The coefficient of t in the remaining derivative must therefore equal 1.</p>
+<div class="formula">If the t coefficient of the primitive’s rational part is R(x), then R′(x) − xR(x) = 1.</div>
+<p>No rational R solves this equation. At a finite pole, R′ has a pole of one order higher than xR, so it cannot be canceled. With no finite poles, R is a polynomial. For a nonzero polynomial, −xR has degree one higher than R and cannot cancel R′ to produce a constant. R = 0 also fails.</p>
+<p>Thus the Gaussian density has no elementary antiderivative, and neither does its CDF as a function of z. The erf identity is exact because erf names a special function defined by an integral. The numerical methods above turn that identity into usable numbers.</p>
+</section>
+<section class="panel" id="sources">
+<div class="eyebrow">References</div><h2>Sources and reproducibility</h2>
+<ul class="source-list">
+<li><a href="https://faculty.etsu.edu/gardnerr/4047/notes-Hogg-McKean-Craig/Hogg-McKean-Craig-3-4.pdf">ETSU, Section 3.4: The Normal Distribution</a> — series on pp. 5–6 and the published comparison values in Example 3.4.2 on p. 7.</li>
+<li><a href="https://dlmf.nist.gov/7.2">NIST DLMF §7.2</a> — definitions of erf and erfc. <a href="https://dlmf.nist.gov/8.9">DLMF §8.9</a> — incomplete gamma continued fractions.</li>
+<li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.ndtr.html">SciPy ndtr documentation</a> — the standard normal CDF and related functions.</li>
+<li><a href="https://doi.org/10.2307/2318210">M. Rosenlicht, Integration in Finite Terms (1972)</a> — Liouville’s theorem for elementary antiderivatives.</li>
+<li><a href="https://mpmath.org/doc/current/functions/expintegrals.html#mpmath.erfc">mpmath erfc</a> — high-precision reference generation. See the <a href="README.md">project notes</a> for commands and test details.</li>
+</ul>
+</section>
+</main>
+<footer><div class="wrap"><a href="../">← Homework collection</a> · Numerical methods laboratory</div></footer>
+<noscript>Enable JavaScript to run the numerical comparisons.</noscript>
+</body>
+</html>
