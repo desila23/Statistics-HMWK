@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Build contingency tables from CSV data, compare conditional and marginal frequencies, and evaluate Pearson's chi-square test of independence.">
+<title>Statistical Independence — Contingency Table Lab</title>
+<link rel="stylesheet" href="style.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('statsTheme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch{}</script>
+<script defer src="vendor/chart.umd.min.js"></script>
+<script type="module" src="app.mjs"></script>
+</head>
+<body>
+<a class="skip" href="#data">Skip to data lab</a>
+<header><div class="wrap nav"><a href="../">Statistics Lab</a><nav aria-label="Sections"><a href="#data">Dataset</a><a href="#tables">Frequencies</a><a href="#test">Chi-square</a><a href="#theory">Theory</a><a href="#sources">Sources</a></nav><button type="button" id="theme" aria-label="Toggle dark theme" aria-pressed="false">◐ Theme</button></div></header>
+<main class="wrap">
+<section class="hero">
+<div><div class="eyebrow">Statistics · Association and inference</div><h1>Statistical <span>independence.</span></h1><p>Does knowing X change the distribution of F? Build a contingency table, compare conditional frequencies and test how far the observed counts depart from independence.</p><div class="jump"><a class="cta" href="#data">Analyze a dataset ↓</a><a href="#theory">Read the theory ↗</a></div></div>
+<aside class="panel hero-panel"><span class="chip">Observed → Expected → Explained</span><h2>Look beyond the counts.</h2><div class="formula">P(X = xᵢ, F = fⱼ)<br>= P(X = xᵢ)P(F = fⱼ)</div><p>Independence predicts a product of marginal probabilities. The sample helps us check this prediction; it cannot establish a causal mechanism.</p><div class="hero-cells" aria-hidden="true"><span>Oᵢⱼ</span><span>Eᵢⱼ</span><span>P(F | X)</span><span>χ²</span></div><p class="small">Import data or start with a constructed example. The NIST preset provides a published reference calculation.</p></aside>
+</section>
+
+<section id="data" class="stack">
+<div class="section-head"><div class="eyebrow">01 / Dataset</div><h2>Start with paired observations.</h2><p>Each observation has two categorical values, X and F. Numeric values are treated as category labels; group continuous data into meaningful bins before import.</p></div>
+<article class="panel stack">
+<div class="controls"><label class="wide">Example dataset<select id="preset"></select></label><button type="button" id="load">Load example</button><label>Upload CSV<input id="file" type="file" accept=".csv,.txt,text/csv,text/plain"></label></div>
+<p id="sourceNote"></p>
+<label for="csvInput">CSV data · first row contains unique column names</label>
+<textarea id="csvInput" rows="8" spellcheck="false" maxlength="1000000" aria-describedby="csvHelp"></textarea>
+<p id="csvHelp" class="small">Use two columns for individual observations, or add a nonnegative integer count column for already grouped data. Quoted delimiters, newlines and doubled quotes are supported. Empty X/F pairs are excluded and reported. Category labels are trimmed and case-sensitive. Blank lines are ignored. Excluding missing pairs can change the association; inspect missingness before drawing conclusions.</p>
+<div class="controls"><label>Delimiter<select id="delimiter"><option value=",">Comma</option><option value=";">Semicolon</option><option value="tab">Tab</option></select></label><button type="button" id="read">Read columns</button></div>
+<form id="analysisForm" class="controls">
+<label>X column<select id="xColumn"></select></label><label>F column<select id="fColumn"></select></label><label class="wide">Count column<select id="countColumn"></select></label><button class="primary">Analyze dataset</button>
+</form>
+<p id="status" class="status" role="status"></p>
+<p class="small">All processing happens in your browser. No dataset is sent to a server. Limits: 20,000 data rows, 20 categories per variable and 10 million observations after expanding counts.</p>
+</article>
+</section>
+
+<section id="tables" class="stack">
+<div class="section-head"><div class="eyebrow">02 / Describe the sample</div><h2>Counts, marginals and conditionals.</h2><p id="activeDataset">Results appear after analysis.</p></div>
+<div class="metrics" id="metrics"></div>
+<article class="panel stack">
+<div class="controls"><label class="wide">Table view<select id="view"><option value="observed">Observed counts Oᵢⱼ</option><option value="joint">Joint relative frequencies Oᵢⱼ / N</option><option value="rowConditional">Conditional F given X · row percentages</option><option value="colConditional">Conditional X given F · column percentages</option><option value="expected">Expected counts under independence Eᵢⱼ</option></select></label><button id="export" type="button" disabled>Export cell statistics CSV</button></div>
+<p id="viewDescription"></p>
+<div class="table" tabindex="0" role="region" aria-label="Frequency table, horizontally scrollable"><table id="frequencyTable"></table></div>
+<p class="small">Displayed values are rounded. Tests and exports use unrounded calculations. Frequencies may mean counts or proportions; the selected view states which denominator is used.</p>
+</article>
+<div class="grid">
+<article class="panel"><h3>Marginal distributions</h3><div class="table" tabindex="0" role="region" aria-label="Marginal distributions"><table id="marginals"></table></div><p class="small">The two margins each sum to N counts and 100%. They summarize one variable at a time.</p></article>
+<article class="panel stack"><h3>Does F change when X is known?</h3><label>Condition on X<select id="inspectX"></select></label><div class="chart tall"><canvas id="conditionalChart" role="img" aria-label="Conditional distribution of F compared with its marginal distribution"></canvas></div><p id="conditionalNote"></p></article>
+</div>
+</section>
+
+<section id="test" class="stack">
+<div class="section-head"><div class="eyebrow">03 / Compare with independence</div><h2>Pearson’s chi-square statistic.</h2><p>H₀: X and F are independent in the population. H₁: at least one joint probability differs from the product of its margins.</p></div>
+<div class="grid">
+<article class="panel"><h3>Expected counts</h3><div class="formula"><math aria-label="Expected cell count equals row total times column total divided by N"><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mi>i</mi></msub><msub><mi>C</mi><mi>j</mi></msub></mrow><mi>N</mi></mfrac></math></div><p>Under H₀, the fitted joint relative frequency is (Rᵢ/N)(Cⱼ/N). Multiply by N to obtain Eᵢⱼ. Expected counts can be fractional and preserve both observed margins.</p></article>
+<article class="panel"><h3>Sum the departures</h3><div class="formula"><math aria-label="Chi-square equals the sum over all cells of observed minus expected squared over expected"><msup><mi>χ</mi><mn>2</mn></msup><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow></munder><mfrac><msup><mrow><mo>(</mo><msub><mi>O</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>)</mo></mrow><mn>2</mn></msup><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mfrac></math></div><p>Degrees of freedom = (r−1)(c−1). Starting with rc−1 free cell probabilities, fitting the row and column margins uses (r−1)+(c−1) parameters. This implementation uses Pearson’s statistic without Yates’ continuity correction.</p></article>
+</div>
+<article class="panel stack">
+<div class="controls"><label>Significance level α<select id="alpha"><option value="0.01">0.01</option><option value="0.05" selected>0.05</option><option value="0.1">0.10</option></select></label><label class="wide check"><input id="sampling" type="checkbox">Assume independent observations and a suitable sampling design</label></div>
+<p class="small">This assumption concerns independence between observations, not the H₀ relationship between X and F. Frequency counts must represent actual mutually exclusive observations, not arbitrary survey weights. Check the study design before using inferential conclusions.</p>
+<div id="testMetrics" class="metrics"></div>
+<div class="callout" id="adequacy" role="status"></div>
+<h3>What this dataset supports</h3><p id="interpretation"></p><p id="inference"></p>
+<p id="effect"></p>
+</article>
+<article class="panel stack"><h3>Which cells contribute?</h3><p>Inspect observed minus expected and the Pearson residual (O−E)/√E. Squaring the residual gives that cell’s contribution to χ². These diagnostics locate departures; they are not separate cell-level significance tests.</p>
+<div class="table" tabindex="0" role="region" aria-label="Cell diagnostics"><table id="diagnostics"></table></div>
+</article>
+</section>
+
+<section id="theory" class="stack">
+<div class="section-head"><div class="eyebrow">04 / Probability and statistics</div><h2>Independence is a model property.</h2></div>
+<div class="grid">
+<article class="panel"><h3>Independence in probability</h3><p>Random variables X and F are independent if P(X ∈ A, F ∈ B) = P(X ∈ A)P(F ∈ B) for every pair of measurable sets A and B. For categorical variables, checking every category pair is enough.</p><p>When P(X = xᵢ) &gt; 0, independence implies P(F = fⱼ | X = xᵢ) = P(F = fⱼ). Conditional probabilities with a zero-probability conditioning event are not defined by this ratio.</p></article>
+<article class="panel"><h3>Empirical independence vs a test</h3><p>In the empirical distribution, exact independence means Oᵢⱼ/N = (Rᵢ/N)(Cⱼ/N) for every cell. The lab checks this using integer products, before rounding. Real samples can depart from this equality even when the population is independent.</p><p>A hypothesis test asks whether sampling variation plausibly explains the observed departure. A small p-value is evidence against H₀ under the test assumptions. A large p-value means failure to reject H₀; it does not prove independence or give the probability that H₀ is true.</p></article>
+<article class="panel"><h3>When is the approximation useful?</h3><p>The right-tail p-value uses a chi-square distribution with (r−1)(c−1) degrees of freedom. Its large-sample justification requires independent observations and adequate expected counts. As a conservative rule, this lab reports a p-value only when every expected count is at least 5.</p><p>For sparse tables, consider Fisher’s exact test for 2×2 data or a suitable exact/Monte Carlo method. These alternatives are not implemented here. Do not merge categories just to obtain a desired result. Structural zeros, repeated measurements and complex survey designs require other models.</p></article>
+<article class="panel"><h3>Association is not causation</h3><p>A relationship between X and F may reflect confounding, selection, reverse causation or a common cause. For example, training status and alerts could both depend on job role or system exposure.</p><p>A contingency table alone cannot show that changing X would change F. A causal claim needs a defensible study design, relevant assumptions and control of competing explanations. In a constructed teaching example, even a tiny p-value is not evidence about actual security outcomes.</p></article>
+</div>
+</section>
+<section class="panel stack" id="conclusions">
+<div class="eyebrow">05 / Conclusions</div><h2>Describe first. Infer with care.</h2><p id="conclusion"></p><p>The margins summarize each variable; conditional frequencies expose differences across groups. Expected counts translate independence into a prediction with the same margins. Pearson’s statistic measures departures and its p-value is conditional on an appropriate sampling model. Statistical significance, effect size and causality answer different questions.</p>
+<p>Small samples can miss meaningful associations. Large samples can make small departures statistically significant. Cramér’s V provides a descriptive magnitude on a 0–1 scale, without direction or a universal threshold for practical importance.</p>
+</section>
+<section class="panel" id="sources"><div class="eyebrow">Primary references</div><h2>Sources and methods</h2><ul class="source-list">
+<li><a href="https://www.itl.nist.gov/div898/handbook/prc/section4/prc45.htm">NIST/SEMATECH §7.4.5 — contingency tables</a>: expected counts, chi-square test and the wafer-defect reference dataset.</li>
+<li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.contingency.chi2_contingency.html">SciPy chi2_contingency</a>: Pearson’s test, assumptions and published reference calculation. Validation uses correction=False to match this lab.</li>
+<li><a href="README.md">Project README</a> · <a href="TEST_REPORT.md">Executed checks and limits</a></li>
+</ul><p class="small">The p-value is Q(df/2, χ²/2), evaluated with a regularized incomplete gamma routine. No random sampling is used in the analysis. The same retained pairs and counts always give the same result.</p></section>
+</main>
+<footer><div class="wrap"><a href="../">← Homework collection</a> · Statistical independence laboratory</div></footer>
+<noscript>Enable JavaScript to analyze the data.</noscript>
+</body></html>

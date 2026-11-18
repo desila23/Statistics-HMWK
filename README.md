@@ -28,6 +28,11 @@ Simulate Bernoulli and symmetric Rademacher increments with reproducible seeds. 
 
 Static GitHub Pages entry point after publication: `hw4/`. Earlier homework directories are unchanged.
 
+### Statistical Independence
+Construct contingency tables from CSV data, calculate joint, conditional and marginal frequencies, and compare observed counts with an independence model. Includes Pearson’s chi-square statistic, conditional asymptotic p-values, Cramér’s V and interpretation of association versus causality.
+
+[Project notes](hw-statistical-independence/README.md) · [Executed checks](hw-statistical-independence/TEST_REPORT.md)
+
 ## Technologies
 HTML · CSS · JavaScript
 
