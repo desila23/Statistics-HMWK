@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="An interactive probability lab on convergence, the law of large numbers, the central limit theorem, conditional probability and Bayesian inference.">
+<title>Convergence &amp; Bayesian Inference — Statistics Lab</title>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="style-extra.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('statsTheme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch{}</script>
+<script defer src="vendor/chart.umd.min.js"></script><script type="module" src="app.mjs"></script>
+</head>
+<body>
+<a class="skip" href="#modes">Skip to the lesson</a>
+<header><div class="wrap nav"><a href="../">Statistics Lab</a><nav aria-label="Sections"><a href="#modes">Convergence</a><a href="#sampling">LLN &amp; CLT</a><a href="#conditioning">Bayes</a><a href="#posterior">Prior sensitivity</a><a href="#references">Sources</a></nav><button type="button" id="theme" aria-label="Toggle dark theme" aria-pressed="false">◐ Theme</button></div></header>
+<main class="wrap">
+<section class="hero">
+<div><div class="eyebrow">Probability theory · Statistical inference</div><h1>Convergence &amp; <span>Bayesian inference.</span></h1><p>What settles as data accumulate? What changes when we observe new evidence? Explore both questions using repeated samples and a model you can update.</p><div class="jump"><a class="cta" href="#sampling">Run the convergence lab ↓</a><a href="#conditioning">Study the Bayesian update</a></div></div>
+<aside class="panel hero-board"><span class="chip">Two questions about learning</span><h2>One dataset, two perspectives.</h2><p><strong>Repeated sampling:</strong> fix the true parameter and ask how an estimator varies across hypothetical samples.</p><p><strong>Bayesian updating:</strong> condition on the sample you actually observed and use a prior and a likelihood to describe uncertainty about the parameter.</p><div class="hero-steps" aria-label="Prior times likelihood gives posterior after normalization"><b>Prior</b><span>×</span><b>Likelihood</b><span>→</span><b>Posterior</b></div></aside>
+</section>
+
+<section id="modes" class="stack">
+<div class="section-head"><div class="eyebrow">01 / Modes of convergence</div><h2>Four meanings of “approaches.”</h2><p>Write Yₙ for a sequence of random variables and Y for its limit. For the first three modes the variables share a probability space so the difference Yₙ − Y is defined. Convergence in distribution only compares laws.</p></div>
+<div class="grid">
+<article class="panel"><h3>In probability</h3><div class="formula">P(|Yₙ − Y| &gt; ε) → 0 for every ε &gt; 0.</div><p>At a large fixed n, deviations are unlikely. A single path may still deviate infinitely often. This is the conclusion of the weak law of large numbers and a standard notion of estimator consistency.</p></article>
+<article class="panel"><h3>Almost surely</h3><div class="formula">P({ω : limₙ Yₙ(ω) = Y(ω)}) = 1.</div><p>On almost every path, for each ε the deviations are eventually below ε forever. The starting index can depend on the path and ε. This is the conclusion of the strong law.</p></article>
+<article class="panel"><h3>In mean square (L²)</h3><div class="formula">E[(Yₙ − Y)²] → 0.</div><p>Squared errors shrink on average for square-integrable variables. Large errors carry more weight. For an estimator of a constant, mean squared error equals variance plus squared bias.</p></article>
+<article class="panel"><h3>In distribution</h3><div class="formula">Fₙ(t) → F(t) at every continuity point of F.</div><p>The laws approach a limiting law, without a claim of closeness on any individual path. The classical CLT gives this convergence for a standardized sum. If the limit is a constant, distributional convergence also implies convergence in probability.</p></article>
+</div>
+<article class="panel stack"><h3>Which implications hold?</h3><div class="formula">Almost surely ⇒ in probability ⇒ in distribution<br>L² ⇒ in probability</div><p>Almost sure convergence implies convergence in probability by bounded convergence applied to deviation indicators. For L², Markov’s inequality bounds P(|Yₙ−Y| &gt; ε) by E[(Yₙ−Y)²]/ε². For convergence in probability, CDF values are bounded using F(t−ε), F(t+ε) and the deviation probability; continuity at t gives the distributional limit.</p>
+<div class="controls control-row"><label>Counterexample<select id="counter"><option value="rare">L² / probability does not imply almost surely</option><option value="spike">Almost surely does not imply L²</option><option value="law">Distribution does not imply probability</option></select></label></div>
+<div class="callout" id="counterResult" aria-live="polite"></div></article>
+</section>
+
+<section id="sampling" class="stack">
+<div class="section-head"><div class="eyebrow">02 / LLN, CLT and the square root</div><h2>Same average. Different question.</h2><p>The laws of large numbers tell us where a sample average goes. The central limit theorem describes the shape of the remaining error after rescaling.</p></div>
+<div class="grid">
+<article class="panel"><h3>Why √n?</h3><p>For Sₙ = ΣXᵢ, Var(Sₙ) = ΣVar(Xᵢ) + 2Σᵢ&lt;ⱼ Cov(Xᵢ,Xⱼ). Independence makes the covariances zero when second moments exist; pairwise uncorrelatedness is enough for that calculation.</p><div class="formula">Var(Sₙ) = nσ²; &nbsp; SD(Sₙ) = σ√n.<br>Var(X̄ₙ) = σ²/n; &nbsp; SE(X̄ₙ) = σ/√n.</div><p>For independent observations of common variance σ², divide the centered sum by its SD, or multiply the centered average by √n/σ. Both produce variance one. Variance additivity alone does not imply a CLT.</p></article>
+<article class="panel"><h3>What each theorem requires</h3><p>For i.i.d. observations with E|X₁| &lt; ∞, X̄ₙ converges almost surely to μ by the strong LLN, hence also in probability by the weak LLN. A finite variance gives the extra identity E[(X̄ₙ−μ)²] = σ²/n: this proves L² convergence and gives the elementary Chebyshev proof of the weak law.</p><div class="formula">Zₙ = (Sₙ − nμ)/(σ√n) = √n(X̄ₙ − μ)/σ ⇒ N(0,1).</div><p>The classical i.i.d. CLT assumes 0 &lt; σ² &lt; ∞. It asserts convergence in distribution for Zₙ, not that the scaled error vanishes or approaches a normal variable path by path.</p></article>
+</div>
+<article class="panel"><h3>When independence changes the answer</h3><p>Suppose n variables of variance σ² have the same nonnegative pairwise correlation ρ. Then Var(X̄ₙ) = σ²[ρ + (1−ρ)/n]. At ρ = 1 all observations can be copies of one random variable; the average then has the original variance and does not concentrate around μ. Some dependent processes still admit √n scaling with a different variance, under additional assumptions.</p><p>In inference, the standard error controls the precision of a sample mean and is estimated by s/√n under i.i.d. sampling. The CLT supports approximate confidence intervals and tests when its conditions are appropriate. LLN-type consistency of s and Slutsky’s theorem justify replacing σ by s asymptotically.</p>
+<div class="controls"><label>Correlation ρ <output id="rhoValue" for="rho"></output><input id="rho" type="range" value="0.2" min="0" max="1" step=".01"></label></div><p id="scaleResult" class="callout" aria-live="polite"></p></article>
+<article class="panel stack">
+<h3>Bernoulli sampling lab</h3><p>Every path uses successive prefixes of one i.i.d. Bernoulli sequence. The exact distribution of Sₙ is Binomial(n,p), so the same model yields exact deviation probabilities, exact MSE and the standardized CDF.</p>
+<form id="simForm" class="controls">
+<label>Success probability p<input id="p" type="number" min=".05" max=".95" step=".01" value=".30" required></label>
+<label>Final sample size n<input id="n" type="number" min="1" max="4096" value="256" required></label>
+<label>Paths m<input id="m" type="number" min="1" max="1000" value="500" required></label>
+<label>Deviation ε<input id="eps" type="number" min=".01" max=".5" step=".01" value=".10" required></label>
+<label>Seed<input id="seed" type="number" min="0" max="4294967295" value="20261125" required></label>
+<button class="primary">Run simulation</button><button id="export" type="button">Export CSV</button></form>
+<p id="simStatus" role="status"></p><div id="simMetrics" class="metrics"></div>
+<p id="simNote" class="callout"></p>
+</article>
+<div class="grid">
+<article class="panel"><h3>Running means</h3><div class="chart"><canvas id="pathsChart" role="img" aria-label="Running means on up to five Bernoulli paths"></canvas></div><p class="small">Only selected points of each displayed path are drawn. A finite plot illustrates the strong law; it cannot verify an eventual statement over infinitely many n.</p></article>
+<article class="panel"><h3>Probability outside the ε band</h3><div class="chart"><canvas id="tailChart" role="img" aria-label="Simulated and exact deviation probabilities with Chebyshev bound"></canvas></div><p class="small">Exact and empirical tails use |X̄ₙ−p| &gt; ε. Small n can show lattice effects. Zero simulated deviations does not imply a zero probability.</p></article>
+<article class="panel"><h3>CLT: compare CDFs</h3><div class="chart"><canvas id="cltChart" role="img" aria-label="Exact standardized binomial CDF and standard normal CDF"></canvas></div><p class="small">The discrete CDF is exact up to floating-point rounding. The normal curve uses a numerical approximation (absolute error about 8 × 10⁻⁸ or less). The metric reports their largest absolute gap, checking both sides of each jump.</p></article>
+<article class="panel"><h3>MSE and deviation data</h3><div class="table" role="region" tabindex="0" aria-label="Convergence results table"><table><thead><tr><th scope="col">n</th><th scope="col">Exact MSE</th><th scope="col">Empirical MSE</th><th scope="col">Exact tail</th><th scope="col">Empirical tail</th></tr></thead><tbody id="simRows"></tbody></table></div></article>
+</div>
+</section>
+
+<section id="conditioning" class="stack">
+<div class="section-head"><div class="eyebrow">03 / Conditioning and Bayes’ theorem</div><h2>Update a probability after evidence.</h2><p>In probability, conditioning restricts the reference population to outcomes consistent with the evidence. In statistics, that conditional model describes data under a hypothesis, or parameters under observed data.</p></div>
+<div class="grid">
+<article class="panel"><h3>Conditional probability</h3><div class="formula">P(A | B) = P(A ∩ B)/P(B), for P(B) &gt; 0.</div><p>Reversing the conditioning generally changes the question. P(alert | incident) describes detector sensitivity; P(incident | alert) asks how credible an alert is.</p></article>
+<article class="panel"><h3>Bayes’ rule</h3><div class="formula">P(H | D) = P(D | H)P(H)/P(D).</div><p>The prior P(H) describes uncertainty before D. The likelihood P(D | H) scores how compatible the observed D is with H. The posterior P(H | D) is updated uncertainty. The evidence P(D) normalizes the result using all competing hypotheses.</p></article>
+</div>
+<article class="panel stack"><h3>Example 1 · An incident detector</h3><p>Use a synthetic population of sessions. An incident may generate an alert; a clean session can also trigger one. These are model inputs, not metrics from a real security system.</p>
+<form id="alertForm" class="controls">
+<label>Prior incident rate (%)<input id="base" type="number" min="0" max="100" step=".01" value="1" required></label>
+<label>Alert given incident (%)<input id="hit" type="number" min="0" max="100" step=".01" value="95" required></label>
+<label>False alarm rate (%)<input id="false" type="number" min="0" max="100" step=".01" value="5" required></label>
+<button class="primary">Update detector</button></form>
+<div id="alertMetrics" class="metrics"></div>
+<div class="table" role="region" tabindex="0" aria-label="Expected detector counts"><table><caption>Expected counts per 10,000 sessions</caption><thead><tr><th scope="col">Session type</th><th scope="col">Alert</th><th scope="col">No alert</th><th scope="col">Total</th></tr></thead><tbody id="alertRows"></tbody></table></div>
+<p id="alertNote" role="status"></p><div class="formula">P(alert) = P(alert | incident)P(incident) + P(alert | clean)P(clean).</div><p class="small">Expected counts can be fractional. With the same sensitivity and false alarm rate, a higher incident rate can still make an incident more probable given an alert.</p>
+</article>
+</section>
+
+<section id="posterior" class="stack">
+<div class="section-head"><div class="eyebrow">04 / Bayesian inference and sensitivity</div><h2>Same observations, different priors.</h2><p>Estimate an unknown event rate θ from k events among n trials. Given θ, the trials are assumed independent with a common event probability.</p></div>
+<div class="grid">
+<article class="panel"><h3>Prior × likelihood</h3><p>For fixed data, the binomial likelihood is L(θ) ∝ θᵏ(1−θ)ⁿ⁻ᵏ. It is a function of θ, not a probability distribution over θ. Using a Beta(a,b) prior multiplies that kernel by θᵃ⁻¹(1−θ)ᵇ⁻¹.</p><div class="formula">π(θ | D) = L(θ)π(θ) / ∫₀¹ L(u)π(u)du<br>θ | D ∼ Beta(a+k, b+n−k).</div></article>
+<article class="panel"><h3>What the posterior gives you</h3><p>The posterior summarizes uncertainty, supports credible intervals, and gives a probability for the next success by averaging θ over the posterior. Under this model, the posterior mean is the predictive probability and, for n&gt;0, equals a weighted average of a/(a+b) and k/n, with weights a+b and n.</p><p>A 95% equal-tailed credible interval contains 95% posterior mass under the chosen prior and likelihood. It is not a statement about the long-run coverage of a frequentist confidence procedure.</p></article>
+</div>
+<article class="panel stack">
+<h3>Example 2 · Estimate an event rate</h3><p>Default: 7 events in 10 trials. Compare a uniform Beta(1,1) prior with a Beta(2,8) prior favoring low rates. The larger preset keeps the observed proportion at 70% and increases the amount of evidence.</p>
+<form id="betaForm" class="stack">
+<div class="controls control-row">
+<label>Trials n<input id="trials" type="number" min="0" max="300" value="10" required></label>
+<label>Events k<input id="events" type="number" min="0" max="300" value="7" required></label>
+<button type="button" id="smallData">7 of 10</button><button type="button" id="largeData">70 of 100</button><button class="primary">Update posteriors</button></div>
+<div class="grid">
+<fieldset><legend>Prior A</legend><div class="controls"><label>Shape a<input id="a1" type="number" min="1" max="30" value="1" required></label><label>Shape b<input id="b1" type="number" min="1" max="30" value="1" required></label></div></fieldset>
+<fieldset><legend>Prior B</legend><div class="controls"><label>Shape a<input id="a2" type="number" min="1" max="30" value="2" required></label><label>Shape b<input id="b2" type="number" min="1" max="30" value="8" required></label></div></fieldset>
+</div></form>
+<p id="betaStatus" role="status"></p>
+<div class="table" role="region" tabindex="0" aria-label="Prior and posterior comparison"><table><thead><tr><th scope="col">Model</th><th scope="col">Prior mean</th><th scope="col">Posterior</th><th scope="col">Mean / predictive</th><th scope="col">95% credible interval</th></tr></thead><tbody id="betaRows"></tbody></table></div>
+<p id="betaNote" class="callout"></p>
+</article>
+<div class="grid">
+<article class="panel"><h3>From prior to posterior</h3><div class="chart"><canvas id="betaChart" role="img" aria-label="Two beta prior densities and their posterior densities"></canvas></div><p class="small">Each density has area one. Click the legend to show or hide curves.</p></article>
+<article class="panel"><h3>What the data say</h3><div class="chart"><canvas id="likelihoodChart" role="img" aria-label="Binomial likelihood divided by its maximum"></canvas></div><p class="small">Relative likelihood peaks at k/n when n&gt;0. Its maximum is set to one only for display; its area does not represent probability.</p></article>
+</div>
+<article class="panel"><h3>Applications, benefits and limits</h3><p>Use past studies or engineering knowledge to form a prior, and a sampling model to form the likelihood. Sequential updates can carry one posterior forward as the next prior if the model correctly accounts for dependence between batches and does not reuse evidence. This is useful for estimating event rates and interpreting rare alerts.</p><p>A prior can stabilize estimates from small samples, while a concentrated or poorly justified prior can pull them away from what the data alone suggest. A misspecified likelihood (for example, treating clustered observations as independent) can make uncertainty look too small. Compare plausible priors and check the fit of the data model. Larger informative samples often reduce sensitivity to well-supported priors; they do not repair a wrong model.</p></article>
+</section>
+<section class="panel" id="references"><div class="eyebrow">References</div><h2>Sources and reproducibility</h2><ul>
+<li><a href="https://ocw.mit.edu/courses/6-436j-fundamentals-of-probability-fall-2018/resources/mit6_436jf18_lec16/">MIT 6.436J lecture 16</a> — modes of convergence.</li>
+<li><a href="https://ocw.mit.edu/courses/6-436j-fundamentals-of-probability-fall-2018/10625dc0942f47c4ddc004b3dbba11d5_MIT6_436JF18_lec18.pdf">MIT 6.436J lecture 18</a> — strong LLN and pathwise convergence.</li>
+<li><a href="https://ocw.mit.edu/courses/6-436j-fundamentals-of-probability-fall-2018/f44fa78f05ac31a4ba2bd82f599dcf60_MIT6_436JF18_lec17.pdf">MIT 6.436J lecture 17</a> — classical CLT.</li>
+<li><a href="https://stat238.berkeley.edu/spring-2026/lectureeight238spring2026/">UC Berkeley STAT 238</a> — Beta–Binomial inference.</li>
+<li><a href="README.md">Methods and limits</a> · <a href="TEST_REPORT.md">Executed checks</a></li>
+</ul></section>
+</main>
+<footer><div class="wrap"><a href="../">← Homework collection</a> · Convergence and Bayesian inference</div></footer>
+<noscript>Enable JavaScript to run the interactive examples.</noscript>
+</body></html>

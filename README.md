@@ -33,6 +33,11 @@ Construct contingency tables from CSV data, calculate joint, conditional and mar
 
 [Project notes](hw-statistical-independence/README.md) · [Executed checks](hw-statistical-independence/TEST_REPORT.md)
 
+### Convergence and Bayesian Inference
+Compare the main modes of convergence, explore the LLN and CLT with Bernoulli samples, and update probabilities under a detector and a Beta–Binomial model.
+
+[Project notes](hw-convergence-bayes/README.md) · [Executed checks](hw-convergence-bayes/TEST_REPORT.md)
+
 ## Technologies
 HTML · CSS · JavaScript
 
